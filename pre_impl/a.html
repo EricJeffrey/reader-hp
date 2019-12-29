@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tester</title>
+    <style>
+        body {
+            background: rgb(235, 171, 107);
+            padding: 0%;
+            margin: 0%;
+            height: 100%;
+            width: 100%;
+            overflow-y: hidden;
+        }
+
+        body::-webkit-scrollbar{
+            display: none;
+        }
+
+        #bodydiv {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            overflow-y: hidden;
+            /* overflow-x: hidden; */
+        }
+
+        .contentdiv {
+            float: left;
+            display: block;
+            width: 50%;
+            height: 100%;
+        }
+    </style>
+    <script>
+        // 给bodydiv添加一个child，然后更改bodydiv的style
+        function work() {
+            let bodydiv = document.getElementById("bodydiv");
+            let newchild = document.createElement("div");
+            newchild.className = "contentdiv";
+            newchild.innerHTML = "2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236<br>2236";
+            bodydiv.appendChild(newchild);
+            bodydiv.style.width = "300%";
+        }
+        function byId(id) {
+            return document.getElementById(id);
+        }
+        function lastPage() {
+            let bodydiv = byId("bodydiv");
+            let currentPageIndex = Number(bodydiv.getAttribute("current-page-index"));
+            let pageCnt = bodydiv.childElementCount / 2;
+            if (currentPageIndex != 0) {
+                bodydiv.setAttribute("current-page-index", currentPageIndex - 1);
+                window.scroll({ top: 0, left: bodydiv.children[(currentPageIndex - 1) * 2].offsetLeft, behavior: "smooth" });
+            }
+        }
+        function appendChild(data) {
+            let tmpChild = document.createElement("div");
+            tmpChild.className = "contentdiv";
+            tmpChild.innerHTML = data;
+            bodydiv.appendChild(tmpChild);
+        };
+        function nextpage() {
+            let bodydiv = byId("bodydiv");
+            let currentPageIndex = Number(bodydiv.getAttribute("current-page-index"));
+            let pageCnt = bodydiv.childElementCount / 2;
+            // 是否最后一页
+            if (currentPageIndex == pageCnt - 1) {
+                let data = "";
+                for (let i = 0; i < 30; i++)
+                    data = data + "Dreamtale." + "<br>";
+                appendChild(data);
+                appendChild(data.replace("Dreamtale", "Coldplay Yellow"));
+                bodydiv.style.width = (pageCnt + 1) * 100 + "%";
+                bodydiv.setAttribute("current-page-index", currentPageIndex + 1);
+            } else {
+                bodydiv.setAttribute("current-page-index", currentPageIndex + 1);
+            }
+            window.scroll({ top: 0, left: bodydiv.children[(currentPageIndex + 1) * 2].offsetLeft, behavior: "smooth" });
+        }
+        window.addEventListener("keypress", (ev) => {
+            console.log(ev);
+            if (ev.keyCode == 32) {
+                if (ev.shiftKey) {
+                    lastPage();
+                } else {
+                    nextpage();
+                }
+            }
+        });
+        window.onload = () => {
+            let data = "";
+            for (let i = 0; i < 30; i++)
+                data = data + "Dreamtale." + "<br>";
+            appendChild(data);
+            appendChild(data.replace("Dreamtale", "Coldplay Yellow"));
+        };
+
+    </script>
+</head>
+
+<body>
+    <div id="toolsdiv">
+        <input type="button" value="nextpage" onclick="nextpage()">
+    </div>
+    <div id="bodydiv" current-page-index="0">
+    </div>
+</body>
+
+</html>
