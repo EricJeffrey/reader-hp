@@ -152,6 +152,39 @@
             addListener();
         }
     </script>
+    <script>
+        function sentencetrans() {
+            var appKey = '6beed72e6568ccdb';
+            //注意：暴露appSecret，有被盗用造成损失的风险
+            var key = '';
+            var salt = (new Date).getTime();
+            var curTime = Math.round(new Date().getTime() / 1000);
+            var query = "afraid";
+            // 多个query可以用\n连接  如 query='apple\norange\nbanana\npear'
+            var from = 'en';
+            var to = 'zh-CHS';
+            var str1 = appKey + truncate(query) + salt + curTime + key;
+            var sign = sha256(str1);
+            $.ajax({
+                url: 'http://openapi.youdao.com/api',
+                type: 'post',
+                dataType: 'jsonp',
+                data: {
+                    q: query,
+                    appKey: appKey,
+                    salt: salt,
+                    from: from,
+                    to: to,
+                    sign: sign,
+                    signType: "v3",
+                    curtime: curTime,
+                },
+                success: (data) => {
+                    console.log(data);
+                }
+            });
+        }
+    </script>
 </head>
 
 <body>

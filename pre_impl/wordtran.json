@@ -1,0 +1,59 @@
+{
+    "tSpeakUrl": "http://openapi.youdao.com/ttsapi?q=%E5%AE%B3%E6%80%95&langType=zh-CHS&sign=4EF0E82DE9AEE0941D00EA9BECB091A4&salt=1577697115811&voice=4&format=mp3&appKey=6beed72e6568ccdb",
+    "returnPhrase": [
+        "afraid"
+    ],
+    "web": [
+        {
+            "value": [
+                "害怕",
+                "担心的",
+                "不怕",
+                "还怕"
+            ],
+            "key": "Afraid"
+        },
+        {
+            "value": [
+                "不怕累"
+            ],
+            "key": "Afraid tired"
+        },
+        {
+            "value": [
+                "害怕",
+                "犯愁的",
+                "惧怕",
+                "担心的"
+            ],
+            "key": "afraid d"
+        }
+    ],
+    "query": "afraid",
+    "translation": [
+        "害怕"
+    ],
+    "errorCode": "0",
+    "dict": {
+        "url": "yddict://m.youdao.com/dict?le=eng&q=afraid"
+    },
+    "webdict": {
+        "url": "http://m.youdao.com/dict?le=eng&q=afraid"
+    },
+    "basic": {
+        "exam_type": [
+            "高中",
+            "初中"
+        ],
+        "us-phonetic": "əˈfreɪd",
+        "phonetic": "əˈfreɪd",
+        "uk-phonetic": "əˈfreɪd",
+        "uk-speech": "http://openapi.youdao.com/ttsapi?q=afraid&langType=en&sign=23F2F18BAF9DDD5C5F3A5FCA14FE86F0&salt=1577697115811&voice=5&format=mp3&appKey=6beed72e6568ccdb",
+        "explains": [
+            "adj. 害怕的；恐怕；担心的"
+        ],
+        "us-speech": "http://openapi.youdao.com/ttsapi?q=afraid&langType=en&sign=23F2F18BAF9DDD5C5F3A5FCA14FE86F0&salt=1577697115811&voice=6&format=mp3&appKey=6beed72e6568ccdb"
+    },
+    "l": "en2zh-CHS",
+    "speakUrl": "http://openapi.youdao.com/ttsapi?q=afraid&langType=en&sign=23F2F18BAF9DDD5C5F3A5FCA14FE86F0&salt=1577697115811&voice=4&format=mp3&appKey=6beed72e6568ccdb"
+}
