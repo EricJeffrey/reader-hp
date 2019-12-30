@@ -9,6 +9,8 @@
     <style>
         body {
             background: rgb(235, 171, 107);
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 16pt;
         }
 
         @keyframes transboxanimation {
@@ -27,36 +29,128 @@
 
         .transbox {
             animation: transboxanimation 0.15s;
-            border: black solid 1px;
-            padding: 5px;
+            padding: 10px;
             position: absolute;
             background-color: rgb(225, 161, 97);
+            box-shadow: rgb(32, 32, 32) 1px 2px 4px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-size: 12pt;
         }
     </style>
+    <script src="http://shared.ydstatic.com/js/jquery/jquery-3.1.1.min.js"></script>
+    <script src="https://cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js"></script>
+    <script src="https://cdn.bootcss.com/js-sha256/0.9.0/sha256.min.js"></script>
     <script>
-        window.onload = () => {
+        function truncate(q) {
+            var len = q.length;
+            if (len <= 20) return q;
+            return q.substring(0, 10) + len + q.substring(len - 10, len);
+        }
+
+        function gettrans(word, onsuccess) {
+            onsuccess({
+                "returnPhrase": ["garden"], "query": "garden", "translation": ["花园"], "errorCode": "0", "basic": { "us-phonetic": "ˈɡɑːrdn", "phonetic": "ˈɡɑːdn", "uk-phonetic": "ˈɡɑːdn", "explains": ["n. 花园；菜园", "vt. 栽培花木", "vi. 从事园艺；在园中种植", "n. (Garden)人名；(英、意、巴基)加登"] }
+            });
+            return;
+            // var appKey = '6beed72e6568ccdb';
+            // //注意：暴露appSecret，有被盗用造成损失的风险
+            // var key = '9YvKBZETbS9VeZZL2fJgc7z3Moz8BMkL';
+            // var salt = (new Date).getTime();
+            // var curTime = Math.round(new Date().getTime() / 1000);
+            // var query = word;
+            // // 多个query可以用\n连接  如 query='apple\norange\nbanana\npear'
+            // var from = 'en';
+            // var to = 'zh-CHS';
+            // var str1 = appKey + truncate(query) + salt + curTime + key;
+            // var sign = sha256(str1);
+            // $.ajax({
+            //     url: 'http://openapi.youdao.com/api',
+            //     type: 'post',
+            //     dataType: 'jsonp',
+            //     data: {
+            //         q: query,
+            //         appKey: appKey,
+            //         salt: salt,
+            //         from: from,
+            //         to: to,
+            //         sign: sign,
+            //         signType: "v3",
+            //         curtime: curTime,
+            //     },
+            //     success: onsuccess
+            // });
+        }
+
+        var transboxdiv;
+        var transboxvisible = false;
+        var hoveronwho;
+
+        function showtrans(ev) {
+            if (hoveronwho == null || hoveronwho != ev.target)
+                return;
+            let target = ev.target;
+            transboxdiv = document.createElement("div");
+            transboxdiv.className = "transbox";
+            transboxdiv.style.left = target.offsetLeft + "px";
+            console.log(target.offsetTop);
+            console.log(target.offsetLeft);
+            console.log(target.offsetHeight);
+            console.log(target.offsetWidth);
+            transboxdiv.style.bottom = (window.innerHeight - target.offsetTop) + "px";
+            transboxdiv.innerHTML = "Loading...";
+            document.body.appendChild(transboxdiv);
+            transboxvisible = true;
+            let word = ev.target.textContent;
+            gettrans(word, (data) => {
+                console.log(data);
+                if (transboxvisible) {
+                    let tmphtml = data["returnPhrase"] + "<br>";
+                    if (data.basic != null) {
+                        let basic = data["basic"];
+                        tmphtml += "英 [" + basic["us-phonetic"] + "]" + ", 美 [" + basic["uk-phonetic"] + "]";
+                        for (let i = 0; i < basic["explains"].length; i++) {
+                            const explain = basic["explains"][i];
+                            if (i != 0) tmphtml += "<br>";
+                            tmphtml += explain;
+                        }
+                    } else {
+                        tmphtml += data["translation"];
+                    }
+                    transboxdiv.innerHTML = tmphtml;
+                    let computedstyle = getComputedStyle(transboxdiv);
+                    let computedtop = computedstyle.top;
+                    if (Number(computedtop.substring(0, computedtop.length - 2)) <= 0) {
+                        transboxdiv.style.bottom = null;
+                        transboxdiv.style.top = (target.offsetTop + target.offsetHeight) + "px";
+                    }
+                }
+            });
+        };
+
+        function mouseover(event) {
+            const ev = event;
+            hoveronwho = ev.target;
+            window.setTimeout(showtrans, 500, ev);
+        }
+
+        function mouseout(event) {
+            if (transboxvisible) document.body.removeChild(transboxdiv);
+            transboxvisible = false;
+            hoveronwho = null;
+        }
+
+        function addListener() {
             let wordlist = document.getElementsByClassName("word");
-            let contentdiv = document.getElementById("content");
-            var tmpdiv;
             for (let i = 0; i < wordlist.length; i++) {
                 const word = wordlist[i];
-                word.addEventListener("mouseover", (event) => {
-                    const ev = event;
-                    let target = ev.currentTarget;
-                    tmpdiv = document.createElement("div");
-                    tmpdiv.className = "transbox";
-                    tmpdiv.style.left = target.offsetLeft + "px";
-                    tmpdiv.style.bottom = (window.innerHeight - target.offsetTop) + "px";
-                    console.log("top: " + target.offsetTop + ", dom.body.height: " + contentdiv.clientHeight);
-                    tmpdiv.style.zIndex = "1";
-                    tmpdiv.innerText = "Translation will be showed here";
-                    document.body.appendChild(tmpdiv);
-                });
-                word.addEventListener("mouseout", (event) => {
-                    document.body.removeChild(tmpdiv);
-                });
+                word.addEventListener("mouseover", mouseover);
+                word.addEventListener("mouseout", mouseout);
             }
         };
+
+        window.onload = () => {
+            addListener();
+        }
     </script>
 </head>
 
@@ -130,6 +224,88 @@
             <span class="word">there</span><span> </span><span class="word">was</span><span> </span>
             <span class="word">no</span><span> </span><span class="word">finer</span><span> </span>
             <span class="word">boy</span><span> </span><span class="word">anywhere.</span>
+        </p>
+        <p>
+            <span class="word">The</span><span class="word"> </span><span class="word">Dursleys</span><span
+                class="word"> </span><span class="word">had</span><span class="word"> </span><span
+                class="word">everything</span><span class="word"> </span><span class="word">they</span><span
+                class="word"> </span><span class="word">wanted</span><span class="word">, </span><span
+                class="word">but</span><span class="word"> </span><span class="word">they</span><span class="word">
+            </span><span class="word">also</span><span class="word"> </span><span class="word">had</span><span
+                class="word"> </span><span class="word">a</span><span class="word"> </span><span
+                class="word">secret</span><span class="word">, </span><span class="word">and</span><span class="word">
+            </span><span class="word">their</span><span class="word"> </span><span class="word">greatest</span><span
+                class="word"> </span><span class="word">fear</span><span class="word"> </span><span
+                class="word">was</span><span class="word"> </span><span class="word">that</span><span class="word">
+            </span><span class="word">somebody</span><span class="word"> </span><span class="word">would</span><span
+                class="word"> </span><span class="word">discover</span><span class="word"> </span><span
+                class="word">it</span><span class="word">. </span><span class="word">They</span><span class="word">
+            </span><span class="word">didn't</span><span class="word"> </span><span class="word">think</span><span
+                class="word"> </span><span class="word">they</span><span class="word"> </span><span
+                class="word">could</span><span class="word"> </span><span class="word">bear</span><span class="word">
+            </span><span class="word">it</span><span class="word"> </span><span class="word">if</span><span
+                class="word"> </span><span class="word">anyone</span><span class="word"> </span><span
+                class="word">found</span><span class="word"> </span><span class="word">out</span><span class="word">
+            </span><span class="word">about</span><span class="word"> </span><span class="word">the</span><span
+                class="word"> </span><span class="word">Potters</span><span class="word">. </span><span
+                class="word">Mrs</span><span class="word">. </span><span class="word">Potter</span><span class="word">
+            </span><span class="word">was</span><span class="word"> </span><span class="word">Mrs</span><span
+                class="word">. </span><span class="word">Dursley's</span><span class="word"> </span><span
+                class="word">sister</span><span class="word">, </span><span class="word">but</span><span class="word">
+            </span><span class="word">they</span><span class="word"> </span><span class="word">hadn't</span><span
+                class="word"> </span><span class="word">met</span><span class="word"> </span><span
+                class="word">for</span><span class="word"> </span><span class="word">several</span><span class="word">
+            </span><span class="word">years;</span><span class="word"> </span><span class="word">in</span><span
+                class="word"> </span><span class="word">fact</span><span class="word">, </span><span
+                class="word">Mrs</span><span class="word">. </span><span class="word">Dursley</span><span class="word">
+            </span><span class="word">pretended</span><span class="word"> </span><span class="word">she</span><span
+                class="word"> </span><span class="word">didn't</span><span class="word"> </span><span
+                class="word">have</span><span class="word"> </span><span class="word">a</span><span class="word">
+            </span><span class="word">sister</span><span class="word">, </span><span class="word">because</span><span
+                class="word"> </span><span class="word">her</span><span class="word"> </span><span
+                class="word">sister</span><span class="word"> </span><span class="word">and</span><span class="word">
+            </span><span class="word">her</span><span class="word"> </span><span
+                class="word">good-for-nothing</span><span class="word"> </span><span class="word">husband</span><span
+                class="word"> </span><span class="word">were</span><span class="word"> </span><span
+                class="word">as</span><span class="word"> </span><span class="word">unDursleyish</span><span
+                class="word"> </span><span class="word">as</span><span class="word"> </span><span
+                class="word">it</span><span class="word"> </span><span class="word">was</span><span class="word">
+            </span><span class="word">possible</span><span class="word"> </span><span class="word">to</span><span
+                class="word"> </span><span class="word">be</span><span class="word">. </span><span
+                class="word">The</span><span class="word"> </span><span class="word">Dursleys</span><span class="word">
+            </span><span class="word">shuddered</span><span class="word"> </span><span class="word">to</span><span
+                class="word"> </span><span class="word">think</span><span class="word"> </span><span
+                class="word">what</span><span class="word"> </span><span class="word">the</span><span class="word">
+            </span><span class="word">neighbors</span><span class="word"> </span><span class="word">would</span><span
+                class="word"> </span><span class="word">say</span><span class="word"> </span><span
+                class="word">if</span><span class="word"> </span><span class="word">the</span><span class="word">
+            </span><span class="word">Potters</span><span class="word"> </span><span class="word">arrived</span><span
+                class="word"> </span><span class="word">in</span><span class="word"> </span><span
+                class="word">the</span><span class="word"> </span><span class="word">street</span><span class="word">.
+            </span><span class="word">The</span><span class="word"> </span><span class="word">Dursleys</span><span
+                class="word"> </span><span class="word">knew</span><span class="word"> </span><span
+                class="word">that</span><span class="word"> </span><span class="word">the</span><span class="word">
+            </span><span class="word">Potters</span><span class="word"> </span><span class="word">had</span><span
+                class="word"> </span><span class="word">a</span><span class="word"> </span><span
+                class="word">small</span><span class="word"> </span><span class="word">son</span><span class="word">,
+            </span><span class="word">too</span><span class="word">, </span><span class="word">but</span><span
+                class="word"> </span><span class="word">they</span><span class="word"> </span><span
+                class="word">had</span><span class="word"> </span><span class="word">never</span><span class="word">
+            </span><span class="word">even</span><span class="word"> </span><span class="word">seen</span><span
+                class="word"> </span><span class="word">him</span><span class="word">. </span><span
+                class="word">This</span><span class="word"> </span><span class="word">boy</span><span class="word">
+            </span><span class="word">was</span><span class="word"> </span><span class="word">another</span><span
+                class="word"> </span><span class="word">good</span><span class="word"> </span><span
+                class="word">reason</span><span class="word"> </span><span class="word">for</span><span class="word">
+            </span><span class="word">keeping</span><span class="word"> </span><span class="word">the</span><span
+                class="word"> </span><span class="word">Potters</span><span class="word"> </span><span
+                class="word">away;</span><span class="word"> </span><span class="word">they</span><span class="word">
+            </span><span class="word">didn't</span><span class="word"> </span><span class="word">want</span><span
+                class="word"> </span><span class="word">Dudley</span><span class="word"> </span><span
+                class="word">mixing</span><span class="word"> </span><span class="word">with</span><span class="word">
+            </span><span class="word">a</span><span class="word"> </span><span class="word">child</span><span
+                class="word"> </span><span class="word">like</span><span class="word"> </span><span
+                class="word">that.</span>
         </p>
     </div>
 </body>
