@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>wordtran</title>
+    <style>
+        body {
+            background: rgb(235, 171, 107);
+        }
+
+        @keyframes transboxanimation {
+            0% {
+                opacity: 0;
+            }
+
+            30% {
+                opacity: 0.75;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .transbox {
+            animation: transboxanimation 0.15s;
+            border: black solid 1px;
+            padding: 5px;
+            position: absolute;
+            background-color: rgb(225, 161, 97);
+        }
+    </style>
+    <script>
+        window.onload = () => {
+            let wordlist = document.getElementsByClassName("word");
+            let contentdiv = document.getElementById("content");
+            var tmpdiv;
+            for (let i = 0; i < wordlist.length; i++) {
+                const word = wordlist[i];
+                word.addEventListener("mouseover", (event) => {
+                    const ev = event;
+                    let target = ev.currentTarget;
+                    tmpdiv = document.createElement("div");
+                    tmpdiv.className = "transbox";
+                    tmpdiv.style.left = target.offsetLeft + "px";
+                    tmpdiv.style.bottom = (window.innerHeight - target.offsetTop) + "px";
+                    console.log("top: " + target.offsetTop + ", dom.body.height: " + contentdiv.clientHeight);
+                    tmpdiv.style.zIndex = "1";
+                    tmpdiv.innerText = "Translation will be showed here";
+                    document.body.appendChild(tmpdiv);
+                });
+                word.addEventListener("mouseout", (event) => {
+                    document.body.removeChild(tmpdiv);
+                });
+            }
+        };
+    </script>
+</head>
+
+<body>
+    <div id="content">
+        <p class="para">
+            <span class="word">Mr</span><span>. </span><span class="word">and</span><span> </span>
+            <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span>, </span>
+            <span class="word">of</span><span> </span><span class="word">number</span><span> </span>
+            <span class="word">four</span><span>, </span><span class="word">Privet</span><span> </span>
+            <span class="word">Drive</span><span>, </span><span class="word">were</span><span> </span>
+            <span class="word">proud</span><span> </span><span class="word">to</span><span> </span>
+            <span class="word">say</span><span> </span><span class="word">that</span><span> </span>
+            <span class="word">they</span><span> </span><span class="word">were</span><span> </span>
+            <span class="word">perfectly</span><span> </span><span class="word">normal</span><span>, </span>
+            <span class="word">thank</span><span> </span><span class="word">you</span><span> </span>
+            <span class="word">very</span><span> </span><span class="word">much</span><span>. </span>
+            <span class="word">They</span><span> </span><span class="word">were</span><span> </span>
+            <span class="word">the</span><span> </span><span class="word">last</span><span> </span>
+            <span class="word">people</span><span> </span>you'<span class="word">d</span><span> </span>
+            <span class="word">expect</span><span> </span><span class="word">to</span><span> </span>
+            <span class="word">be</span><span> </span><span class="word">involved</span><span> </span>
+            <span class="word">in</span><span> </span><span class="word">anything</span><span> </span>
+            <span class="word">strange</span><span> </span><span class="word">or</span><span> </span>
+            <span class="word">mysterious</span><span>, </span><span class="word">because</span><span> </span>
+            <span class="word">they</span><span> </span><span class="word">just</span><span> </span>didn'
+            <span class="word">t</span><span> </span><span class="word">hold</span><span> </span>
+            <span class="word">with</span><span> </span><span class="word">such</span><span> </span>nonsense.
+            <span class="word">Mr</span><span>. </span><span class="word">Dursley</span><span> </span>
+            <span class="word">was</span><span> </span><span class="word">the</span><span> </span>
+            <span class="word">director</span><span> </span><span class="word">of</span><span> </span>
+            <span class="word">a</span><span> </span><span class="word">firm</span><span> </span>
+            <span class="word">called</span><span> </span><span class="word">Grunnings</span><span>, </span>
+            <span class="word">which</span><span> </span><span class="word">made</span><span> </span>
+            <span class="word">drills</span><span>. </span><span class="word">He</span><span> </span>
+            <span class="word">was</span><span> </span><span class="word">a</span><span> </span>
+            <span class="word">big</span><span>, </span><span class="word">beefy</span><span> </span>
+            <span class="word">man</span><span> </span><span class="word">with</span><span> </span>
+            <span class="word">hardly</span><span> </span><span class="word">any</span><span> </span>
+            <span class="word">neck</span><span>, </span><span class="word">although</span><span> </span>
+            <span class="word">he</span><span> </span><span class="word">did</span><span> </span>
+            <span class="word">have</span><span> </span><span class="word">a</span><span> </span>
+            <span class="word">very</span><span> </span><span class="word">large</span><span> </span>
+            <span class="word">mustache</span><span>.</span>
+        </p>
+        <p class="para">
+            <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span> </span>
+            <span class="word">was</span><span> </span><span class="word">thin</span><span> </span>
+            <span class="word">and</span><span> </span><span class="word">blonde</span><span> </span>
+            <span class="word">and</span><span> </span><span class="word">had</span><span> </span>
+            <span class="word">nearly</span><span> </span><span class="word">twice</span><span> </span>
+            <span class="word">the</span><span> </span><span class="word">usual</span><span> </span>
+            <span class="word">amount</span><span> </span><span class="word">of</span><span> </span>
+            <span class="word">neck</span><span>, </span><span class="word">which</span><span> </span>
+            <span class="word">came</span><span> </span><span class="word">in</span><span> </span>
+            <span class="word">very</span><span> </span><span class="word">useful</span><span> </span>
+            <span class="word">as</span><span> </span><span class="word">she</span><span> </span>
+            <span class="word">spent</span><span> </span><span class="word">so</span><span> </span>
+            <span class="word">much</span><span> </span><span class="word">of</span><span> </span>
+            <span class="word">her</span><span> </span><span class="word">time</span><span> </span>
+            <span class="word">craning</span><span> </span><span class="word">over</span><span> </span>
+            <span class="word">garden</span><span> </span><span class="word">fences</span><span>, </span>
+            <span class="word">spying</span><span> </span><span class="word">on</span><span> </span>
+            <span class="word">the</span><span> </span><span class="word">neighbors</span><span>. </span>
+            <span class="word">The</span><span> </span><span class="word">Dursleys</span><span> </span>
+            <span class="word">had</span><span> </span><span class="word">a</span><span> </span>
+            <span class="word">small</span><span> </span><span class="word">son</span><span> </span>
+            <span class="word">called</span><span> </span><span class="word">Dudley</span><span> </span>
+            <span class="word">and</span><span> </span><span class="word">in</span><span> </span>
+            <span class="word">their</span><span> </span><span class="word">opinion</span><span> </span>
+            <span class="word">there</span><span> </span><span class="word">was</span><span> </span>
+            <span class="word">no</span><span> </span><span class="word">finer</span><span> </span>
+            <span class="word">boy</span><span> </span><span class="word">anywhere.</span>
+        </p>
+    </div>
+</body>
+
+</html>
