@@ -20,6 +20,13 @@
   > 使用有道API，添加一个固定位置的元素即可
 - 显示句子翻译
   > 同上
+- 选中文本弹出菜单
+  > 使用`document.onselectionchange`搭配`onmouseup`, `onmousedown`实现
+
+## Todo
+
+- 鼠标可以移动到翻译框内部（而不是在移动到target外部后翻译框就消失）
+  > 通过mousedown事件判断目标对象是不是翻译框内部
 
 ## 问题与解决
 
