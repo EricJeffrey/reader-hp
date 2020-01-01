@@ -33,3 +33,5 @@
 
 - `window.scroll`不起作用
   > 设置`body`的`overflow-y: hidden`
+- 替换文档中的单词为span标签
+  > 正则: `[",\.?!]{0,} ["']{0,}`, `[a-zA-Z0-9'-]{1,}<`

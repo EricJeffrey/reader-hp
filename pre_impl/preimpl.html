@@ -7,6 +7,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>PreImplementation</title>
     <style>
+        html {
+            height: 100%;
+            width: 100%;
+        }
+
         body {
             background-color: sandybrown;
             font-size: 18pt;
@@ -17,6 +22,10 @@
             margin: 0px;
             overflow-y: hidden;
         }
+
+        /* body::-webkit-scrollbar {
+            display: none;
+        } */
 
         #contentdiv {
             display: flex;
@@ -30,24 +39,105 @@
             float: left;
             width: 100%;
             height: 100%;
+            overflow-y: hidden;
         }
 
-        .leftpagediv, .rightpagediv {
-            width: 46%;
-            height: 100%;
-            padding: 2%;
+        .leftpagediv {
+            margin: 3%;
+            width: 44%;
+            height: fit-content;
+            padding-bottom: 3%;
+        }
+
+        .rightpagediv {
+            margin: 3%;
+            width: 44%;
+            height: fit-content;
+            padding-bottom: 3%;
         }
     </style>
     <script>
+        let classname_pagediv = "pagediv";
+        let classname_lpagediv = "leftpagediv";
+        let classname_rpagediv = "rightpagediv";
+        let classname_para = "para";
+
         function byid(id) {
             return document.getElementById(id);
         }
         function byclass(classname, index) {
             return document.getElementsByClassName(classname)[index];
         }
+        function create(tagname, classname) {
+            let tmp = document.createElement(tagname);
+            tmp.className = classname;
+            return tmp;
+        }
+
         // 创建多个页，内容为data，data的每一行表示一个段落，data为span组成的字符串
         function createPages(data = "") {
+            let linelist = data.split("\n");
+            let paralist = [];
+            // all <p>
+            linelist.forEach(line => {
+                let para = create("p", classname_para);
+                para.innerHTML = line;
+                paralist.push(para);
+            });
+            let contentdiv = byid("contentdiv");
+            let widthinitcontentdiv = 2;
+            let widthcurcontentdiv = 0;
+            let indexpara = 0;
+            while (indexpara < paralist.length) {
+                console.log("indexpara: " + indexpara);
+                let pagediv = create("div", classname_pagediv);
+                contentdiv.appendChild(pagediv);
+                widthcurcontentdiv += 1;
+                contentdiv.style.width = (widthinitcontentdiv + widthcurcontentdiv) * 100 + "%";
 
+                let targetheight = pagediv.clientHeight;
+                let leftpagediv = create("div", classname_lpagediv);
+                let rightpagediv = create("div", classname_rpagediv);
+                pagediv.appendChild(leftpagediv);
+                pagediv.appendChild(rightpagediv);
+
+                let insertpara2lrpage = (paralist, indexpara, lrpagediv, targetheight) => {
+                    while (indexpara < paralist.length) {
+                        lrpagediv.appendChild(paralist[indexpara]);
+                        if (lrpagediv.clientHeight > targetheight) {
+                            lrpagediv.removeChild(lrpagediv.lastElementChild);
+                            break;
+                        }
+                        indexpara += 1;
+                    }
+                    return indexpara;
+                };
+                indexpara = insertpara2lrpage(paralist, indexpara, leftpagediv, targetheight);
+                indexpara = insertpara2lrpage(paralist, indexpara, rightpagediv, targetheight);
+            }
+        }
+        window.onload = () => {
+            console.log("I am Executed");
+            let data = "<p class=\"para\"> 出师表</para>\n<p class=\"para\"> 诸葛亮</para>\n<p class=\"para\"> 先帝创业未半而中道崩殂</para>\n<p class=\"para\"> 今天下三分</para>\n<p class=\"para\"> 益州疲弊</para>\n<p class=\"para\"> 此诚危急存亡之秋也</para>\n<p class=\"para\"> 然侍卫之臣不懈于内</para>\n<p class=\"para\"> 忠志之士忘身于外者</para>\n<p class=\"para\"> 盖追先帝之殊遇</para>\n<p class=\"para\"> 欲报之于陛下也</para>\n<p class=\"para\"> 诚宜开张圣听</para>\n<p class=\"para\"> 以光先帝遗德</para>\n<p class=\"para\"> 恢弘志士之气</para>\n<p class=\"para\"> 不宜妄自菲薄</para>\n<p class=\"para\"> 引喻失义</para>\n<p class=\"para\"> 以塞忠谏之路也</para>\n<p class=\"para\"> 宫中府中</para>\n<p class=\"para\"> 俱为一体</para>\n<p class=\"para\"> 陟罚臧否</para>\n<p class=\"para\"> 不宜异同</para>\n<p class=\"para\"> 若有作奸犯科及为忠善者</para>\n<p class=\"para\"> 宜付有司论其刑赏</para>\n<p class=\"para\"> 以昭陛下平明之理</para>\n<p class=\"para\"> 不宜偏私</para>\n<p class=\"para\"> 使内外异法也</para>\n<p class=\"para\"> 侍中侍郎郭攸之、费祎、董允等\"</para>\n<p class=\"para\"> 此皆良实</para>\n<p class=\"para\"> 志虑忠纯</para>\n<p class=\"para\"> 是以先帝简拔以遗陛下</para>\n<p class=\"para\"> 愚以为宫中之事</para>\n<p class=\"para\"> 事无大小</para>\n<p class=\"para\"> 悉以咨之</para>\n<p class=\"para\"> 然后施行</para>\n<p class=\"para\"> 必能裨补阙漏</para>\n<p class=\"para\"> 有所广益</para>\n<p class=\"para\"> 将军向宠</para>\n<p class=\"para\"> 性行淑均</para>\n<p class=\"para\"> 晓畅军事</para>\n<p class=\"para\"> 试用于昔日</para>\n<p class=\"para\"> 先帝称之曰能</para>\n<p class=\"para\"> 是以众议举宠为督</para>\n<p class=\"para\"> 愚以为营中之事</para>\n<p class=\"para\"> 悉以咨之</para>\n<p class=\"para\"> 必能使行阵和睦</para>\n<p class=\"para\"> 优劣得所</para>\n<p class=\"para\"> 亲贤臣</para>\n<p class=\"para\"> 远小人</para>\n<p class=\"para\"> 此先汉所以兴隆也</para>\n<p class=\"para\"> 亲小人</para>\n<p class=\"para\"> 远贤臣</para>\n<p class=\"para\"> 此后汉所以倾颓也</para>\n<p class=\"para\"> 先帝在时</para>\n<p class=\"para\"> 每与臣论此事</para>\n<p class=\"para\"> 未尝不叹息痛恨于桓灵也\"</para>\n<p class=\"para\"> 侍中尚书、长史、参军\"</para>\n<p class=\"para\"> 此悉贞良死节之臣</para>\n<p class=\"para\"> 愿陛下亲之信之</para>\n<p class=\"para\"> 则汉室之隆</para>\n<p class=\"para\"> 可计日而待也</para>\n<p class=\"para\"> 臣本布衣</para>\n<p class=\"para\"> 躬耕于南阳</para>\n<p class=\"para\"> 苟全性命于乱世</para>\n<p class=\"para\"> 不求闻达于诸侯</para>\n<p class=\"para\"> 先帝不以臣卑鄙</para>\n<p class=\"para\"> 猥自枉屈</para>\n<p class=\"para\"> 三顾臣于草庐之中</para>\n<p class=\"para\"> 咨臣以当世之事</para>\n<p class=\"para\"> 由是感激</para>\n<p class=\"para\"> 遂许先帝以驱驰</para>\n<p class=\"para\"> 后值倾覆</para>\n<p class=\"para\"> 受任于败军之际</para>\n<p class=\"para\"> 奉命于危难之间</para>\n<p class=\"para\"> 尔来二十有一年矣</para>\n<p class=\"para\"> 先帝知臣谨慎</para>\n<p class=\"para\"> 故临崩寄臣以大事也</para>\n<p class=\"para\"> 受命以来</para>\n<p class=\"para\"> 夙夜忧叹</para>\n<p class=\"para\"> 恐托付不效</para>\n<p class=\"para\"> 以伤先帝之明</para>\n<p class=\"para\"> 故五月渡泸</para>\n<p class=\"para\"> 深入不毛</para>\n<p class=\"para\"> 今南方已定</para>\n<p class=\"para\"> 兵甲已足</para>\n<p class=\"para\"> 当奖率三军</para>\n<p class=\"para\"> 北定中原</para>\n<p class=\"para\"> 庶竭驽钝</para>\n<p class=\"para\"> 攘除奸凶</para>\n<p class=\"para\"> 兴复汉室</para>\n<p class=\"para\"> 还于旧都</para>\n<p class=\"para\"> 此臣所以报先帝而忠陛下之职分也</para>\n<p class=\"para\"> 至于斟酌损益</para>\n<p class=\"para\"> 进尽忠言</para>\n<p class=\"para\"> 则攸之祎、允之任也\"</para>\n<p class=\"para\"> 愿陛下托臣以讨贼兴复之效</para>\n<p class=\"para\"> 不效</para>\n<p class=\"para\"> 则治臣之罪</para>\n<p class=\"para\"> 以告先帝之灵</para>\n<p class=\"para\"> 若无兴德之言</para>\n<p class=\"para\"> 则责攸之祎、允等之慢\"</para>\n<p class=\"para\"> 以彰其咎</para>\n<p class=\"para\"> 陛下亦宜自谋</para>\n<p class=\"para\"> 以咨诹善道</para>\n<p class=\"para\"> 察纳雅言</para>\n<p class=\"para\"> 深追先帝遗诏</para>\n<p class=\"para\"> 臣不胜受恩感激</para>\n<p class=\"para\"> 今当远离</para>\n<p class=\"para\"> 临表涕零</para>\n<p class=\"para\"> 不知所言</para>";
+            createPages(data);
+        }
+        // 测试函数
+        var test = {
+            // 测试指定className之后元素是否具有高度 -> 将元素加入到dom之后才会开始计算高度
+            testElementHeight: function () {
+                let div = document.createElement("div");
+                div.className = classname_pagediv;
+                byid("contentdiv").appendChild(div);
+                let tmpp = document.createElement("p");
+                tmpp.innerText = "11111111111111111111111111111111111111";
+                div.appendChild(tmpp);
+                console.log("body-height: " + document.body.clientHeight);
+                console.log("div-height: " + div.clientHeight);
+                console.log("pagediv-height: " + byclass("pagediv", 0).clientHeight);
+                console.log("leftpagediv-height: " + byclass(classname_lpagediv, 0).clientHeight);
+                console.log("leftpagediv-padding: " + byclass(classname_lpagediv, 0).style.padding);
+
+            }
         }
     </script>
 </head>
