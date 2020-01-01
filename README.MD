@@ -22,6 +22,7 @@
   > 同上
 - 选中文本弹出菜单
   > 使用`document.onselectionchange`搭配`onmouseup`, `onmousedown`实现
+- 记录阅读进度
 
 ## Todo
 

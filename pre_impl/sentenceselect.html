@@ -55,7 +55,7 @@
                 left: "0px",
                 selectedtext: "",
             };
-            let setboxshow = (newshowing) => {
+            let setboxshow = (newshowing = false) => {
                 status.boxshowing = newshowing;
                 if (status.boxshowing) {
                     toolbox.style.left = (status.left + 2) + "px";
@@ -104,14 +104,17 @@
             };
 
         };
+        function work() {
+            console.log("click");
+        }
     </script>
 </head>
 
 <body>
     <div id="sentencetoolbox">
-        <input type="button" value="Copy">
+        <input type="button" value="Copy" onclick="work()">
         <span></span>
-        <input type="button" value="❤">
+        <input type="button" value="❤" onclick="work()">
     </div>
     <div id="content">
         <p class="para">
