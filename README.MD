@@ -29,9 +29,17 @@
 - 鼠标可以移动到翻译框内部（而不是在移动到target外部后翻译框就消失）
   > 通过mousedown事件判断目标对象是不是翻译框内部
 
-## 问题与解决
+## 问题记录
 
 - `window.scroll`不起作用
   > 设置`body`的`overflow-y: hidden`
 - 替换文档中的单词为span标签
   > 正则: `[",\.?!]{0,} ["']{0,}`, `[a-zA-Z0-9'-]{1,}<`
+- 隐藏滚动条
+  - 隐藏并禁用滚动: `body{overflow-x: hidden;}`
+  - 隐藏但不禁用: `body:-webkit-scrollbar{display: none}`
+- 横向滚动实现:
+  - 子元素: `#content{display: flex; width: 300%; height: 100%; overflow-y: hidden}`
+  - 父元素: `body{width: 100%; height: 100%; overflow-y: hidden}`
+- 固定宽度、高度
+  > 使用`div{width: 100%; height: 100%}`时需要同时制定父元素(包括`body`与`html`)的宽高

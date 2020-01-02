@@ -15,7 +15,7 @@
         body {
             background-color: sandybrown;
             font-size: 18pt;
-            font-family: 'Times New Roman', Times, serif, '等线';
+            font-family: 'Times New Roman', '等线', Times, serif;
             width: 100%;
             height: 100%;
             padding: 0px;
@@ -23,9 +23,9 @@
             overflow-y: hidden;
         }
 
-        /* body::-webkit-scrollbar {
+        body::-webkit-scrollbar {
             display: none;
-        } */
+        }
 
         #contentdiv {
             display: flex;
@@ -42,18 +42,11 @@
             overflow-y: hidden;
         }
 
-        .leftpagediv {
-            margin: 3%;
-            width: 44%;
-            height: fit-content;
-            padding-bottom: 3%;
-        }
-
+        .leftpagediv,
         .rightpagediv {
-            margin: 3%;
+            padding: 3%;
             width: 44%;
             height: fit-content;
-            padding-bottom: 3%;
         }
     </style>
     <script>
@@ -84,23 +77,24 @@
                 para.innerHTML = line;
                 paralist.push(para);
             });
+
             let contentdiv = byid("contentdiv");
-            let widthinitcontentdiv = 2;
+            let widthinitcontentdiv = 0;
             let widthcurcontentdiv = 0;
             let indexpara = 0;
             while (indexpara < paralist.length) {
-                console.log("indexpara: " + indexpara);
+                // pagediv
                 let pagediv = create("div", classname_pagediv);
                 contentdiv.appendChild(pagediv);
                 widthcurcontentdiv += 1;
                 contentdiv.style.width = (widthinitcontentdiv + widthcurcontentdiv) * 100 + "%";
-
+                // left/right-page-div
                 let targetheight = pagediv.clientHeight;
                 let leftpagediv = create("div", classname_lpagediv);
                 let rightpagediv = create("div", classname_rpagediv);
                 pagediv.appendChild(leftpagediv);
                 pagediv.appendChild(rightpagediv);
-
+                // insert
                 let insertpara2lrpage = (paralist, indexpara, lrpagediv, targetheight) => {
                     while (indexpara < paralist.length) {
                         lrpagediv.appendChild(paralist[indexpara]);
@@ -116,11 +110,47 @@
                 indexpara = insertpara2lrpage(paralist, indexpara, rightpagediv, targetheight);
             }
         }
-        window.onload = () => {
-            console.log("I am Executed");
-            let data = "<p class=\"para\"> 出师表</para>\n<p class=\"para\"> 诸葛亮</para>\n<p class=\"para\"> 先帝创业未半而中道崩殂</para>\n<p class=\"para\"> 今天下三分</para>\n<p class=\"para\"> 益州疲弊</para>\n<p class=\"para\"> 此诚危急存亡之秋也</para>\n<p class=\"para\"> 然侍卫之臣不懈于内</para>\n<p class=\"para\"> 忠志之士忘身于外者</para>\n<p class=\"para\"> 盖追先帝之殊遇</para>\n<p class=\"para\"> 欲报之于陛下也</para>\n<p class=\"para\"> 诚宜开张圣听</para>\n<p class=\"para\"> 以光先帝遗德</para>\n<p class=\"para\"> 恢弘志士之气</para>\n<p class=\"para\"> 不宜妄自菲薄</para>\n<p class=\"para\"> 引喻失义</para>\n<p class=\"para\"> 以塞忠谏之路也</para>\n<p class=\"para\"> 宫中府中</para>\n<p class=\"para\"> 俱为一体</para>\n<p class=\"para\"> 陟罚臧否</para>\n<p class=\"para\"> 不宜异同</para>\n<p class=\"para\"> 若有作奸犯科及为忠善者</para>\n<p class=\"para\"> 宜付有司论其刑赏</para>\n<p class=\"para\"> 以昭陛下平明之理</para>\n<p class=\"para\"> 不宜偏私</para>\n<p class=\"para\"> 使内外异法也</para>\n<p class=\"para\"> 侍中侍郎郭攸之、费祎、董允等\"</para>\n<p class=\"para\"> 此皆良实</para>\n<p class=\"para\"> 志虑忠纯</para>\n<p class=\"para\"> 是以先帝简拔以遗陛下</para>\n<p class=\"para\"> 愚以为宫中之事</para>\n<p class=\"para\"> 事无大小</para>\n<p class=\"para\"> 悉以咨之</para>\n<p class=\"para\"> 然后施行</para>\n<p class=\"para\"> 必能裨补阙漏</para>\n<p class=\"para\"> 有所广益</para>\n<p class=\"para\"> 将军向宠</para>\n<p class=\"para\"> 性行淑均</para>\n<p class=\"para\"> 晓畅军事</para>\n<p class=\"para\"> 试用于昔日</para>\n<p class=\"para\"> 先帝称之曰能</para>\n<p class=\"para\"> 是以众议举宠为督</para>\n<p class=\"para\"> 愚以为营中之事</para>\n<p class=\"para\"> 悉以咨之</para>\n<p class=\"para\"> 必能使行阵和睦</para>\n<p class=\"para\"> 优劣得所</para>\n<p class=\"para\"> 亲贤臣</para>\n<p class=\"para\"> 远小人</para>\n<p class=\"para\"> 此先汉所以兴隆也</para>\n<p class=\"para\"> 亲小人</para>\n<p class=\"para\"> 远贤臣</para>\n<p class=\"para\"> 此后汉所以倾颓也</para>\n<p class=\"para\"> 先帝在时</para>\n<p class=\"para\"> 每与臣论此事</para>\n<p class=\"para\"> 未尝不叹息痛恨于桓灵也\"</para>\n<p class=\"para\"> 侍中尚书、长史、参军\"</para>\n<p class=\"para\"> 此悉贞良死节之臣</para>\n<p class=\"para\"> 愿陛下亲之信之</para>\n<p class=\"para\"> 则汉室之隆</para>\n<p class=\"para\"> 可计日而待也</para>\n<p class=\"para\"> 臣本布衣</para>\n<p class=\"para\"> 躬耕于南阳</para>\n<p class=\"para\"> 苟全性命于乱世</para>\n<p class=\"para\"> 不求闻达于诸侯</para>\n<p class=\"para\"> 先帝不以臣卑鄙</para>\n<p class=\"para\"> 猥自枉屈</para>\n<p class=\"para\"> 三顾臣于草庐之中</para>\n<p class=\"para\"> 咨臣以当世之事</para>\n<p class=\"para\"> 由是感激</para>\n<p class=\"para\"> 遂许先帝以驱驰</para>\n<p class=\"para\"> 后值倾覆</para>\n<p class=\"para\"> 受任于败军之际</para>\n<p class=\"para\"> 奉命于危难之间</para>\n<p class=\"para\"> 尔来二十有一年矣</para>\n<p class=\"para\"> 先帝知臣谨慎</para>\n<p class=\"para\"> 故临崩寄臣以大事也</para>\n<p class=\"para\"> 受命以来</para>\n<p class=\"para\"> 夙夜忧叹</para>\n<p class=\"para\"> 恐托付不效</para>\n<p class=\"para\"> 以伤先帝之明</para>\n<p class=\"para\"> 故五月渡泸</para>\n<p class=\"para\"> 深入不毛</para>\n<p class=\"para\"> 今南方已定</para>\n<p class=\"para\"> 兵甲已足</para>\n<p class=\"para\"> 当奖率三军</para>\n<p class=\"para\"> 北定中原</para>\n<p class=\"para\"> 庶竭驽钝</para>\n<p class=\"para\"> 攘除奸凶</para>\n<p class=\"para\"> 兴复汉室</para>\n<p class=\"para\"> 还于旧都</para>\n<p class=\"para\"> 此臣所以报先帝而忠陛下之职分也</para>\n<p class=\"para\"> 至于斟酌损益</para>\n<p class=\"para\"> 进尽忠言</para>\n<p class=\"para\"> 则攸之祎、允之任也\"</para>\n<p class=\"para\"> 愿陛下托臣以讨贼兴复之效</para>\n<p class=\"para\"> 不效</para>\n<p class=\"para\"> 则治臣之罪</para>\n<p class=\"para\"> 以告先帝之灵</para>\n<p class=\"para\"> 若无兴德之言</para>\n<p class=\"para\"> 则责攸之祎、允等之慢\"</para>\n<p class=\"para\"> 以彰其咎</para>\n<p class=\"para\"> 陛下亦宜自谋</para>\n<p class=\"para\"> 以咨诹善道</para>\n<p class=\"para\"> 察纳雅言</para>\n<p class=\"para\"> 深追先帝遗诏</para>\n<p class=\"para\"> 臣不胜受恩感激</para>\n<p class=\"para\"> 今当远离</para>\n<p class=\"para\"> 临表涕零</para>\n<p class=\"para\"> 不知所言</para>";
-            createPages(data);
-        }
+
+        class PageTurner {
+            registerEvent() {
+                window.addEventListener("keydown", (event) => {
+                    if (event.code == "PageUp") this.prevPage();
+                    if (event.code == "PageDown") this.nextPage();
+                });
+                window.addEventListener("keypress", (event) => {
+                    if (event.code == "Space" && event.shiftKey) this.prevPage();
+                    if (event.code == "Space" && !event.shiftKey) this.nextPage();
+                });
+                let validClickWidth = 400;
+                window.addEventListener("click", (event) => {
+                    if (event.clientX <= validClickWidth) this.prevPage();
+                    if (event.clientX >= document.body.clientWidth - validClickWidth) this.nextPage();
+                });
+                window.addEventListener("wheel", (event) => {
+                    if (event.deltaY > 0) this.nextPage();
+                    if (event.deltaY < 0) this.prevPage();
+                })
+            }
+            prevPage() {
+                let attrPageCurContDiv = "page-current";
+                let contentdiv = byid("contentdiv");
+                let currentPage = Number(contentdiv.getAttribute(attrPageCurContDiv));
+                if (currentPage > 0) {
+                    contentdiv.setAttribute(attrPageCurContDiv, currentPage - 1);
+                    window.scroll({ top: 0, left: contentdiv.children[currentPage - 1].offsetLeft, behavior: "smooth" });
+                }
+            }
+            nextPage() {
+                let attrPageCurContDiv = "page-current";
+                let contentdiv = byid("contentdiv");
+                let currentPage = Number(contentdiv.getAttribute(attrPageCurContDiv));
+                if (currentPage < contentdiv.childElementCount - 1) {
+                    contentdiv.setAttribute(attrPageCurContDiv, currentPage + 1);
+                    window.scroll({ top: 0, left: contentdiv.children[currentPage + 1].offsetLeft, behavior: "smooth" });
+                }
+            }
+        };
+
         // 测试函数
         var test = {
             // 测试指定className之后元素是否具有高度 -> 将元素加入到dom之后才会开始计算高度
@@ -137,501 +167,39 @@
                 console.log("leftpagediv-height: " + byclass(classname_lpagediv, 0).clientHeight);
                 console.log("leftpagediv-padding: " + byclass(classname_lpagediv, 0).style.padding);
 
+            },
+            testWheelEvent: function () {
+                window.addEventListener("wheel", (event) => {
+                    console.log(event);
+                });
+            },
+            testClickOnWindowPos: function () {
+                window.addEventListener("click", (event) => {
+                    console.log(event);
+                });
+            },
+            testPageUpDown: function () {
+                window.addEventListener("keypress", (event) => {
+                    console.log(event);
+                });
+                window.addEventListener("keydown", (event) => {
+                    console.log(event);
+                });
             }
+        }
+
+        window.onload = () => {
+            console.log("I am Executed");
+            let data = "出师表\n诸葛亮\n先帝创业未半而中道崩殂\n今天下三分\n益州疲弊\n此诚危急存亡之秋也\n然侍卫之臣不懈于内\n忠志之士忘身于外者\n盖追先帝之殊遇\n欲报之于陛下也\n诚宜开张圣听\n以光先帝遗德\n恢弘志士之气\n不宜妄自菲薄\n引喻失义\n以塞忠谏之路也\n宫中府中\n俱为一体\n陟罚臧否\n不宜异同\n若有作奸犯科及为忠善者\n宜付有司论其刑赏\n以昭陛下平明之理\n不宜偏私\n使内外异法也\n侍中侍郎郭攸之、费祎、董允等\n此皆良实\n志虑忠纯\n是以先帝简拔以遗陛下\n愚以为宫中之事\n事无大小\n悉以咨之\n然后施行\n必能裨补阙漏\n有所广益\n将军向宠\n性行淑均\n晓畅军事\n试用于昔日\n先帝称之曰能\n是以众议举宠为督\n愚以为营中之事\n悉以咨之\n必能使行阵和睦\n优劣得所\n亲贤臣\n远小人\n此先汉所以兴隆也\n亲小人\n远贤臣\n此后汉所以倾颓也\n先帝在时\n每与臣论此事\n未尝不叹息痛恨于桓灵也\n侍中尚书、长史、参军\n此悉贞良死节之臣\n愿陛下亲之信之\n则汉室之隆\n可计日而待也\n臣本布衣\n躬耕于南阳\n苟全性命于乱世\n不求闻达于诸侯\n先帝不以臣卑鄙\n猥自枉屈\n三顾臣于草庐之中\n咨臣以当世之事\n由是感激\n遂许先帝以驱驰\n后值倾覆\n受任于败军之际\n奉命于危难之间\n尔来二十有一年矣\n先帝知臣谨慎\n故临崩寄臣以大事也\n受命以来\n夙夜忧叹\n恐托付不效\n以伤先帝之明\n故五月渡泸\n深入不毛\n今南方已定\n兵甲已足\n当奖率三军\n北定中原\n庶竭驽钝\n攘除奸凶\n兴复汉室\n还于旧都\n此臣所以报先帝而忠陛下之职分也\n至于斟酌损益\n进尽忠言\n则攸之祎、允之任也\n愿陛下托臣以讨贼兴复之效\n不效\n则治臣之罪\n以告先帝之灵\n若无兴德之言\n则责攸之祎、允等之慢\n以彰其咎\n陛下亦宜自谋\n以咨诹善道\n察纳雅言\n深追先帝遗诏\n臣不胜受恩感激\n今当远离\n临表涕零\n不知所言";
+            createPages(data);
+            let pageTurner = new PageTurner();
+            pageTurner.registerEvent();
         }
     </script>
 </head>
 
 <body>
-    <div id="contentdiv">
-        <div class="pagediv">
-            <div class="leftpagediv">
-                <p class="para">
-                    <span class="word">Mr</span><span>. </span><span class="word">and</span><span> </span>
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span>, </span>
-                    <span class="word">of</span><span> </span><span class="word">number</span><span> </span>
-                    <span class="word">four</span><span>, </span><span class="word">Privet</span><span> </span>
-                    <span class="word">Drive</span><span>, </span><span class="word">were</span><span> </span>
-                    <span class="word">proud</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">say</span><span> </span><span class="word">that</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">perfectly</span><span> </span><span class="word">normal</span><span>, </span>
-                    <span class="word">thank</span><span> </span><span class="word">you</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">much</span><span>. </span>
-                    <span class="word">They</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">last</span><span> </span>
-                    <span class="word">people</span><span> </span>you'<span class="word">d</span><span> </span>
-                    <span class="word">expect</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">be</span><span> </span><span class="word">involved</span><span> </span>
-                    <span class="word">in</span><span> </span><span class="word">anything</span><span> </span>
-                    <span class="word">strange</span><span> </span><span class="word">or</span><span> </span>
-                    <span class="word">mysterious</span><span>, </span><span class="word">because</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">just</span><span> </span>didn'
-                    <span class="word">t</span><span> </span><span class="word">hold</span><span> </span>
-                    <span class="word">with</span><span> </span><span class="word">such</span><span> </span>nonsense.
-                    <span class="word">Mr</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">the</span><span> </span>
-                    <span class="word">director</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">a</span><span> </span><span class="word">firm</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Grunnings</span><span>, </span>
-                    <span class="word">which</span><span> </span><span class="word">made</span><span> </span>
-                    <span class="word">drills</span><span>. </span><span class="word">He</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">big</span><span>, </span><span class="word">beefy</span><span> </span>
-                    <span class="word">man</span><span> </span><span class="word">with</span><span> </span>
-                    <span class="word">hardly</span><span> </span><span class="word">any</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">although</span><span> </span>
-                    <span class="word">he</span><span> </span><span class="word">did</span><span> </span>
-                    <span class="word">have</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">large</span><span> </span>
-                    <span class="word">mustache</span><span>.</span>
-                </p>
-                <p class="para">
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">thin</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">blonde</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">had</span><span> </span>
-                    <span class="word">nearly</span><span> </span><span class="word">twice</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">usual</span><span> </span>
-                    <span class="word">amount</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">which</span><span> </span>
-                    <span class="word">came</span><span> </span><span class="word">in</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">useful</span><span> </span>
-                    <span class="word">as</span><span> </span><span class="word">she</span><span> </span>
-                    <span class="word">spent</span><span> </span><span class="word">so</span><span> </span>
-                    <span class="word">much</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">her</span><span> </span><span class="word">time</span><span> </span>
-                    <span class="word">craning</span><span> </span><span class="word">over</span><span> </span>
-                    <span class="word">garden</span><span> </span><span class="word">fences</span><span>, </span>
-                    <span class="word">spying</span><span> </span><span class="word">on</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">neighbors</span><span>. </span>
-                    <span class="word">The</span><span> </span><span class="word">Dursleys</span><span> </span>
-                    <span class="word">had</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">small</span><span> </span><span class="word">son</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Dudley</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">in</span><span> </span>
-                    <span class="word">their</span><span> </span><span class="word">opinion</span><span> </span>
-                    <span class="word">there</span><span> </span><span class="word">was</span><span> </span>
-                    <span class="word">no</span><span> </span><span class="word">finer</span><span> </span>
-                    <span class="word">boy</span><span> </span><span class="word">anywhere.</span>
-                </p>
-                <p class="para">
-                    <span class="word">Mr</span><span>. </span><span class="word">and</span><span> </span>
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span>, </span>
-                    <span class="word">of</span><span> </span><span class="word">number</span><span> </span>
-                    <span class="word">four</span><span>, </span><span class="word">Privet</span><span> </span>
-                    <span class="word">Drive</span><span>, </span><span class="word">were</span><span> </span>
-                    <span class="word">proud</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">say</span><span> </span><span class="word">that</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">perfectly</span><span> </span><span class="word">normal</span><span>, </span>
-                    <span class="word">thank</span><span> </span><span class="word">you</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">much</span><span>. </span>
-                    <span class="word">They</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">last</span><span> </span>
-                    <span class="word">people</span><span> </span>you'<span class="word">d</span><span> </span>
-                    <span class="word">expect</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">be</span><span> </span><span class="word">involved</span><span> </span>
-                    <span class="word">in</span><span> </span><span class="word">anything</span><span> </span>
-                    <span class="word">strange</span><span> </span><span class="word">or</span><span> </span>
-                    <span class="word">mysterious</span><span>, </span><span class="word">because</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">just</span><span> </span>didn'
-                    <span class="word">t</span><span> </span><span class="word">hold</span><span> </span>
-                    <span class="word">with</span><span> </span><span class="word">such</span><span> </span>nonsense.
-                    <span class="word">Mr</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">the</span><span> </span>
-                    <span class="word">director</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">a</span><span> </span><span class="word">firm</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Grunnings</span><span>, </span>
-                    <span class="word">which</span><span> </span><span class="word">made</span><span> </span>
-                    <span class="word">drills</span><span>. </span><span class="word">He</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">big</span><span>, </span><span class="word">beefy</span><span> </span>
-                    <span class="word">man</span><span> </span><span class="word">with</span><span> </span>
-                    <span class="word">hardly</span><span> </span><span class="word">any</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">although</span><span> </span>
-                    <span class="word">he</span><span> </span><span class="word">did</span><span> </span>
-                    <span class="word">have</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">large</span><span> </span>
-                    <span class="word">mustache</span><span>.</span>
-                </p>
-                <p class="para">
-                    <span class="word">Mr</span><span>. </span><span class="word">and</span><span> </span>
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span>, </span>
-                    <span class="word">of</span><span> </span><span class="word">number</span><span> </span>
-                    <span class="word">four</span><span>, </span><span class="word">Privet</span><span> </span>
-                    <span class="word">Drive</span><span>, </span><span class="word">were</span><span> </span>
-                    <span class="word">proud</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">say</span><span> </span><span class="word">that</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">perfectly</span><span> </span><span class="word">normal</span><span>, </span>
-                    <span class="word">thank</span><span> </span><span class="word">you</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">much</span><span>. </span>
-                    <span class="word">They</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">last</span><span> </span>
-                    <span class="word">people</span><span> </span>you'<span class="word">d</span><span> </span>
-                    <span class="word">expect</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">be</span><span> </span><span class="word">involved</span><span> </span>
-                    <span class="word">in</span><span> </span><span class="word">anything</span><span> </span>
-                    <span class="word">strange</span><span> </span><span class="word">or</span><span> </span>
-                    <span class="word">mysterious</span><span>, </span><span class="word">because</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">just</span><span> </span>didn'
-                    <span class="word">t</span><span> </span><span class="word">hold</span><span> </span>
-                    <span class="word">with</span><span> </span><span class="word">such</span><span> </span>nonsense.
-                    <span class="word">Mr</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">the</span><span> </span>
-                    <span class="word">director</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">a</span><span> </span><span class="word">firm</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Grunnings</span><span>, </span>
-                    <span class="word">which</span><span> </span><span class="word">made</span><span> </span>
-                    <span class="word">drills</span><span>. </span><span class="word">He</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">big</span><span>, </span><span class="word">beefy</span><span> </span>
-                    <span class="word">man</span><span> </span><span class="word">with</span><span> </span>
-                    <span class="word">hardly</span><span> </span><span class="word">any</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">although</span><span> </span>
-                    <span class="word">he</span><span> </span><span class="word">did</span><span> </span>
-                    <span class="word">have</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">large</span><span> </span>
-                    <span class="word">mustache</span><span>.</span>
-                </p>
-            </div>
-            <div class="rightpagediv">
-                <p class="para">
-                    <span class="word">Mr</span><span>. </span><span class="word">and</span><span> </span>
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span>, </span>
-                    <span class="word">of</span><span> </span><span class="word">number</span><span> </span>
-                    <span class="word">four</span><span>, </span><span class="word">Privet</span><span> </span>
-                    <span class="word">Drive</span><span>, </span><span class="word">were</span><span> </span>
-                    <span class="word">proud</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">say</span><span> </span><span class="word">that</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">perfectly</span><span> </span><span class="word">normal</span><span>, </span>
-                    <span class="word">thank</span><span> </span><span class="word">you</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">much</span><span>. </span>
-                    <span class="word">They</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">last</span><span> </span>
-                    <span class="word">people</span><span> </span>you'<span class="word">d</span><span> </span>
-                    <span class="word">expect</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">be</span><span> </span><span class="word">involved</span><span> </span>
-                    <span class="word">in</span><span> </span><span class="word">anything</span><span> </span>
-                    <span class="word">strange</span><span> </span><span class="word">or</span><span> </span>
-                    <span class="word">mysterious</span><span>, </span><span class="word">because</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">just</span><span> </span>didn'
-                    <span class="word">t</span><span> </span><span class="word">hold</span><span> </span>
-                    <span class="word">with</span><span> </span><span class="word">such</span><span> </span>nonsense.
-                    <span class="word">Mr</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">the</span><span> </span>
-                    <span class="word">director</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">a</span><span> </span><span class="word">firm</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Grunnings</span><span>, </span>
-                    <span class="word">which</span><span> </span><span class="word">made</span><span> </span>
-                    <span class="word">drills</span><span>. </span><span class="word">He</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">big</span><span>, </span><span class="word">beefy</span><span> </span>
-                    <span class="word">man</span><span> </span><span class="word">with</span><span> </span>
-                    <span class="word">hardly</span><span> </span><span class="word">any</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">although</span><span> </span>
-                    <span class="word">he</span><span> </span><span class="word">did</span><span> </span>
-                    <span class="word">have</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">large</span><span> </span>
-                    <span class="word">mustache</span><span>.</span>
-                </p>
-                <p class="para">
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">thin</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">blonde</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">had</span><span> </span>
-                    <span class="word">nearly</span><span> </span><span class="word">twice</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">usual</span><span> </span>
-                    <span class="word">amount</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">which</span><span> </span>
-                    <span class="word">came</span><span> </span><span class="word">in</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">useful</span><span> </span>
-                    <span class="word">as</span><span> </span><span class="word">she</span><span> </span>
-                    <span class="word">spent</span><span> </span><span class="word">so</span><span> </span>
-                    <span class="word">much</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">her</span><span> </span><span class="word">time</span><span> </span>
-                    <span class="word">craning</span><span> </span><span class="word">over</span><span> </span>
-                    <span class="word">garden</span><span> </span><span class="word">fences</span><span>, </span>
-                    <span class="word">spying</span><span> </span><span class="word">on</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">neighbors</span><span>. </span>
-                    <span class="word">The</span><span> </span><span class="word">Dursleys</span><span> </span>
-                    <span class="word">had</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">small</span><span> </span><span class="word">son</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Dudley</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">in</span><span> </span>
-                    <span class="word">their</span><span> </span><span class="word">opinion</span><span> </span>
-                    <span class="word">there</span><span> </span><span class="word">was</span><span> </span>
-                    <span class="word">no</span><span> </span><span class="word">finer</span><span> </span>
-                    <span class="word">boy</span><span> </span><span class="word">anywhere.</span>
-                </p>
-                <p class="para">
-                    <span class="word">Mr</span><span>. </span><span class="word">and</span><span> </span>
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span>, </span>
-                    <span class="word">of</span><span> </span><span class="word">number</span><span> </span>
-                    <span class="word">four</span><span>, </span><span class="word">Privet</span><span> </span>
-                    <span class="word">Drive</span><span>, </span><span class="word">were</span><span> </span>
-                    <span class="word">proud</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">say</span><span> </span><span class="word">that</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">perfectly</span><span> </span><span class="word">normal</span><span>, </span>
-                    <span class="word">thank</span><span> </span><span class="word">you</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">much</span><span>. </span>
-                    <span class="word">They</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">last</span><span> </span>
-                    <span class="word">people</span><span> </span>you'<span class="word">d</span><span> </span>
-                    <span class="word">expect</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">be</span><span> </span><span class="word">involved</span><span> </span>
-                    <span class="word">in</span><span> </span><span class="word">anything</span><span> </span>
-                    <span class="word">strange</span><span> </span><span class="word">or</span><span> </span>
-                    <span class="word">mysterious</span><span>, </span><span class="word">because</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">just</span><span> </span>didn'
-                    <span class="word">t</span><span> </span><span class="word">hold</span><span> </span>
-                    <span class="word">with</span><span> </span><span class="word">such</span><span> </span>nonsense.
-                    <span class="word">Mr</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">the</span><span> </span>
-                    <span class="word">director</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">a</span><span> </span><span class="word">firm</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Grunnings</span><span>, </span>
-                    <span class="word">which</span><span> </span><span class="word">made</span><span> </span>
-                    <span class="word">drills</span><span>. </span><span class="word">He</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">big</span><span>, </span><span class="word">beefy</span><span> </span>
-                    <span class="word">man</span><span> </span><span class="word">with</span><span> </span>
-                    <span class="word">hardly</span><span> </span><span class="word">any</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">although</span><span> </span>
-                    <span class="word">he</span><span> </span><span class="word">did</span><span> </span>
-                    <span class="word">have</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">large</span><span> </span>
-                    <span class="word">mustache</span><span>.</span>
-                </p>
-            </div>
-        </div>
-        <div class="pagediv">
-            <div class="leftpagediv">
-                <p class="para">
-                    <span class="word">Mr</span><span>. </span><span class="word">and</span><span> </span>
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span>, </span>
-                    <span class="word">of</span><span> </span><span class="word">number</span><span> </span>
-                    <span class="word">four</span><span>, </span><span class="word">Privet</span><span> </span>
-                    <span class="word">Drive</span><span>, </span><span class="word">were</span><span> </span>
-                    <span class="word">proud</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">say</span><span> </span><span class="word">that</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">perfectly</span><span> </span><span class="word">normal</span><span>, </span>
-                    <span class="word">thank</span><span> </span><span class="word">you</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">much</span><span>. </span>
-                    <span class="word">They</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">last</span><span> </span>
-                    <span class="word">people</span><span> </span>you'<span class="word">d</span><span> </span>
-                    <span class="word">expect</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">be</span><span> </span><span class="word">involved</span><span> </span>
-                    <span class="word">in</span><span> </span><span class="word">anything</span><span> </span>
-                    <span class="word">strange</span><span> </span><span class="word">or</span><span> </span>
-                    <span class="word">mysterious</span><span>, </span><span class="word">because</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">just</span><span> </span>didn'
-                    <span class="word">t</span><span> </span><span class="word">hold</span><span> </span>
-                    <span class="word">with</span><span> </span><span class="word">such</span><span> </span>nonsense.
-                    <span class="word">Mr</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">the</span><span> </span>
-                    <span class="word">director</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">a</span><span> </span><span class="word">firm</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Grunnings</span><span>, </span>
-                    <span class="word">which</span><span> </span><span class="word">made</span><span> </span>
-                    <span class="word">drills</span><span>. </span><span class="word">He</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">big</span><span>, </span><span class="word">beefy</span><span> </span>
-                    <span class="word">man</span><span> </span><span class="word">with</span><span> </span>
-                    <span class="word">hardly</span><span> </span><span class="word">any</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">although</span><span> </span>
-                    <span class="word">he</span><span> </span><span class="word">did</span><span> </span>
-                    <span class="word">have</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">large</span><span> </span>
-                    <span class="word">mustache</span><span>.</span>
-                </p>
-                <p class="para">
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">thin</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">blonde</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">had</span><span> </span>
-                    <span class="word">nearly</span><span> </span><span class="word">twice</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">usual</span><span> </span>
-                    <span class="word">amount</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">which</span><span> </span>
-                    <span class="word">came</span><span> </span><span class="word">in</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">useful</span><span> </span>
-                    <span class="word">as</span><span> </span><span class="word">she</span><span> </span>
-                    <span class="word">spent</span><span> </span><span class="word">so</span><span> </span>
-                    <span class="word">much</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">her</span><span> </span><span class="word">time</span><span> </span>
-                    <span class="word">craning</span><span> </span><span class="word">over</span><span> </span>
-                    <span class="word">garden</span><span> </span><span class="word">fences</span><span>, </span>
-                    <span class="word">spying</span><span> </span><span class="word">on</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">neighbors</span><span>. </span>
-                    <span class="word">The</span><span> </span><span class="word">Dursleys</span><span> </span>
-                    <span class="word">had</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">small</span><span> </span><span class="word">son</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Dudley</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">in</span><span> </span>
-                    <span class="word">their</span><span> </span><span class="word">opinion</span><span> </span>
-                    <span class="word">there</span><span> </span><span class="word">was</span><span> </span>
-                    <span class="word">no</span><span> </span><span class="word">finer</span><span> </span>
-                    <span class="word">boy</span><span> </span><span class="word">anywhere.</span>
-                </p>
-                <p class="para">
-                    <span class="word">Mr</span><span>. </span><span class="word">and</span><span> </span>
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span>, </span>
-                    <span class="word">of</span><span> </span><span class="word">number</span><span> </span>
-                    <span class="word">four</span><span>, </span><span class="word">Privet</span><span> </span>
-                    <span class="word">Drive</span><span>, </span><span class="word">were</span><span> </span>
-                    <span class="word">proud</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">say</span><span> </span><span class="word">that</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">perfectly</span><span> </span><span class="word">normal</span><span>, </span>
-                    <span class="word">thank</span><span> </span><span class="word">you</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">much</span><span>. </span>
-                    <span class="word">They</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">last</span><span> </span>
-                    <span class="word">people</span><span> </span>you'<span class="word">d</span><span> </span>
-                    <span class="word">expect</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">be</span><span> </span><span class="word">involved</span><span> </span>
-                    <span class="word">in</span><span> </span><span class="word">anything</span><span> </span>
-                    <span class="word">strange</span><span> </span><span class="word">or</span><span> </span>
-                    <span class="word">mysterious</span><span>, </span><span class="word">because</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">just</span><span> </span>didn'
-                    <span class="word">t</span><span> </span><span class="word">hold</span><span> </span>
-                    <span class="word">with</span><span> </span><span class="word">such</span><span> </span>nonsense.
-                    <span class="word">Mr</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">the</span><span> </span>
-                    <span class="word">director</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">a</span><span> </span><span class="word">firm</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Grunnings</span><span>, </span>
-                    <span class="word">which</span><span> </span><span class="word">made</span><span> </span>
-                    <span class="word">drills</span><span>. </span><span class="word">He</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">big</span><span>, </span><span class="word">beefy</span><span> </span>
-                    <span class="word">man</span><span> </span><span class="word">with</span><span> </span>
-                    <span class="word">hardly</span><span> </span><span class="word">any</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">although</span><span> </span>
-                    <span class="word">he</span><span> </span><span class="word">did</span><span> </span>
-                    <span class="word">have</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">large</span><span> </span>
-                    <span class="word">mustache</span><span>.</span>
-                </p>
-            </div>
-            <div class="rightpagediv">
-                <p class="para">
-                    <span class="word">Mr</span><span>. </span><span class="word">and</span><span> </span>
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span>, </span>
-                    <span class="word">of</span><span> </span><span class="word">number</span><span> </span>
-                    <span class="word">four</span><span>, </span><span class="word">Privet</span><span> </span>
-                    <span class="word">Drive</span><span>, </span><span class="word">were</span><span> </span>
-                    <span class="word">proud</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">say</span><span> </span><span class="word">that</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">perfectly</span><span> </span><span class="word">normal</span><span>, </span>
-                    <span class="word">thank</span><span> </span><span class="word">you</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">much</span><span>. </span>
-                    <span class="word">They</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">last</span><span> </span>
-                    <span class="word">people</span><span> </span>you'<span class="word">d</span><span> </span>
-                    <span class="word">expect</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">be</span><span> </span><span class="word">involved</span><span> </span>
-                    <span class="word">in</span><span> </span><span class="word">anything</span><span> </span>
-                    <span class="word">strange</span><span> </span><span class="word">or</span><span> </span>
-                    <span class="word">mysterious</span><span>, </span><span class="word">because</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">just</span><span> </span>didn'
-                    <span class="word">t</span><span> </span><span class="word">hold</span><span> </span>
-                    <span class="word">with</span><span> </span><span class="word">such</span><span> </span>nonsense.
-                    <span class="word">Mr</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">the</span><span> </span>
-                    <span class="word">director</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">a</span><span> </span><span class="word">firm</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Grunnings</span><span>, </span>
-                    <span class="word">which</span><span> </span><span class="word">made</span><span> </span>
-                    <span class="word">drills</span><span>. </span><span class="word">He</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">big</span><span>, </span><span class="word">beefy</span><span> </span>
-                    <span class="word">man</span><span> </span><span class="word">with</span><span> </span>
-                    <span class="word">hardly</span><span> </span><span class="word">any</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">although</span><span> </span>
-                    <span class="word">he</span><span> </span><span class="word">did</span><span> </span>
-                    <span class="word">have</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">large</span><span> </span>
-                    <span class="word">mustache</span><span>.</span>
-                </p>
-                <p class="para">
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">thin</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">blonde</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">had</span><span> </span>
-                    <span class="word">nearly</span><span> </span><span class="word">twice</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">usual</span><span> </span>
-                    <span class="word">amount</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">which</span><span> </span>
-                    <span class="word">came</span><span> </span><span class="word">in</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">useful</span><span> </span>
-                    <span class="word">as</span><span> </span><span class="word">she</span><span> </span>
-                    <span class="word">spent</span><span> </span><span class="word">so</span><span> </span>
-                    <span class="word">much</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">her</span><span> </span><span class="word">time</span><span> </span>
-                    <span class="word">craning</span><span> </span><span class="word">over</span><span> </span>
-                    <span class="word">garden</span><span> </span><span class="word">fences</span><span>, </span>
-                    <span class="word">spying</span><span> </span><span class="word">on</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">neighbors</span><span>. </span>
-                    <span class="word">The</span><span> </span><span class="word">Dursleys</span><span> </span>
-                    <span class="word">had</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">small</span><span> </span><span class="word">son</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Dudley</span><span> </span>
-                    <span class="word">and</span><span> </span><span class="word">in</span><span> </span>
-                    <span class="word">their</span><span> </span><span class="word">opinion</span><span> </span>
-                    <span class="word">there</span><span> </span><span class="word">was</span><span> </span>
-                    <span class="word">no</span><span> </span><span class="word">finer</span><span> </span>
-                    <span class="word">boy</span><span> </span><span class="word">anywhere.</span>
-                </p>
-                <p class="para">
-                    <span class="word">Mr</span><span>. </span><span class="word">and</span><span> </span>
-                    <span class="word">Mrs</span><span>. </span><span class="word">Dursley</span><span>, </span>
-                    <span class="word">of</span><span> </span><span class="word">number</span><span> </span>
-                    <span class="word">four</span><span>, </span><span class="word">Privet</span><span> </span>
-                    <span class="word">Drive</span><span>, </span><span class="word">were</span><span> </span>
-                    <span class="word">proud</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">say</span><span> </span><span class="word">that</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">perfectly</span><span> </span><span class="word">normal</span><span>, </span>
-                    <span class="word">thank</span><span> </span><span class="word">you</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">much</span><span>. </span>
-                    <span class="word">They</span><span> </span><span class="word">were</span><span> </span>
-                    <span class="word">the</span><span> </span><span class="word">last</span><span> </span>
-                    <span class="word">people</span><span> </span>you'<span class="word">d</span><span> </span>
-                    <span class="word">expect</span><span> </span><span class="word">to</span><span> </span>
-                    <span class="word">be</span><span> </span><span class="word">involved</span><span> </span>
-                    <span class="word">in</span><span> </span><span class="word">anything</span><span> </span>
-                    <span class="word">strange</span><span> </span><span class="word">or</span><span> </span>
-                    <span class="word">mysterious</span><span>, </span><span class="word">because</span><span> </span>
-                    <span class="word">they</span><span> </span><span class="word">just</span><span> </span>didn'
-                    <span class="word">t</span><span> </span><span class="word">hold</span><span> </span>
-                    <span class="word">with</span><span> </span><span class="word">such</span><span> </span>nonsense.
-                    <span class="word">Mr</span><span>. </span><span class="word">Dursley</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">the</span><span> </span>
-                    <span class="word">director</span><span> </span><span class="word">of</span><span> </span>
-                    <span class="word">a</span><span> </span><span class="word">firm</span><span> </span>
-                    <span class="word">called</span><span> </span><span class="word">Grunnings</span><span>, </span>
-                    <span class="word">which</span><span> </span><span class="word">made</span><span> </span>
-                    <span class="word">drills</span><span>. </span><span class="word">He</span><span> </span>
-                    <span class="word">was</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">big</span><span>, </span><span class="word">beefy</span><span> </span>
-                    <span class="word">man</span><span> </span><span class="word">with</span><span> </span>
-                    <span class="word">hardly</span><span> </span><span class="word">any</span><span> </span>
-                    <span class="word">neck</span><span>, </span><span class="word">although</span><span> </span>
-                    <span class="word">he</span><span> </span><span class="word">did</span><span> </span>
-                    <span class="word">have</span><span> </span><span class="word">a</span><span> </span>
-                    <span class="word">very</span><span> </span><span class="word">large</span><span> </span>
-                    <span class="word">mustache</span><span>.</span>
-                </p>
-            </div>
-        </div>
+    <div id="contentdiv" page-current="0">
     </div>
 </body>
 
