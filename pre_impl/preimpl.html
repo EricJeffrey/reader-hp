@@ -67,6 +67,24 @@
             return tmp;
         }
 
+        var storage = {
+            StrKeyCurrentPage: "page-current",
+            readCurrentPage: function () {
+                let tmp = window.localStorage.getItem(this.StrKeyCurrentPage);
+                if (tmp == null) return 0;
+                return Number(tmp);
+            },
+            setCurrentPage: function (currentpage) {
+                window.localStorage.setItem(this.StrKeyCurrentPage, currentpage);
+            }
+        };
+
+        function initSession() {
+            let currentpage = storage.readCurrentPage();
+            let contentdiv = byid("contentdiv");
+            contentdiv.setAttribute("page-current", currentpage);
+            window.scroll({ top: 0, left: contentdiv.children[currentpage].offsetLeft, behavior: "smooth" });
+        }
         // 创建多个页，内容为data，data的每一行表示一个段落，data为span组成的字符串
         function createPages(data = "") {
             let linelist = data.split("\n");
@@ -111,11 +129,17 @@
             }
         }
 
-        class PageTurner {
+        var PageTurner = {
             registerEvent() {
                 window.addEventListener("keydown", (event) => {
-                    if (event.code == "PageUp") this.prevPage();
-                    if (event.code == "PageDown") this.nextPage();
+                    if (event.code == "PageUp" || event.code == "ArrowLeft") {
+                        event.preventDefault();
+                        this.prevPage();
+                    }
+                    if (event.code == "PageDown" || event.code == "ArrowRight") {
+                        event.preventDefault();
+                        this.nextPage();
+                    }
                 });
                 window.addEventListener("keypress", (event) => {
                     if (event.code == "Space" && event.shiftKey) this.prevPage();
@@ -129,8 +153,8 @@
                 window.addEventListener("wheel", (event) => {
                     if (event.deltaY > 0) this.nextPage();
                     if (event.deltaY < 0) this.prevPage();
-                })
-            }
+                });
+            },
             prevPage() {
                 let attrPageCurContDiv = "page-current";
                 let contentdiv = byid("contentdiv");
@@ -138,8 +162,9 @@
                 if (currentPage > 0) {
                     contentdiv.setAttribute(attrPageCurContDiv, currentPage - 1);
                     window.scroll({ top: 0, left: contentdiv.children[currentPage - 1].offsetLeft, behavior: "smooth" });
+                    storage.setCurrentPage((currentPage - 1));
                 }
-            }
+            },
             nextPage() {
                 let attrPageCurContDiv = "page-current";
                 let contentdiv = byid("contentdiv");
@@ -147,6 +172,8 @@
                 if (currentPage < contentdiv.childElementCount - 1) {
                     contentdiv.setAttribute(attrPageCurContDiv, currentPage + 1);
                     window.scroll({ top: 0, left: contentdiv.children[currentPage + 1].offsetLeft, behavior: "smooth" });
+                    document.cookie = "currentpage=" + (currentPage + 1);
+                    storage.setCurrentPage((currentPage + 1));
                 }
             }
         };
@@ -189,11 +216,10 @@
         }
 
         window.onload = () => {
-            console.log("I am Executed");
-            let data = "出师表\n诸葛亮\n先帝创业未半而中道崩殂\n今天下三分\n益州疲弊\n此诚危急存亡之秋也\n然侍卫之臣不懈于内\n忠志之士忘身于外者\n盖追先帝之殊遇\n欲报之于陛下也\n诚宜开张圣听\n以光先帝遗德\n恢弘志士之气\n不宜妄自菲薄\n引喻失义\n以塞忠谏之路也\n宫中府中\n俱为一体\n陟罚臧否\n不宜异同\n若有作奸犯科及为忠善者\n宜付有司论其刑赏\n以昭陛下平明之理\n不宜偏私\n使内外异法也\n侍中侍郎郭攸之、费祎、董允等\n此皆良实\n志虑忠纯\n是以先帝简拔以遗陛下\n愚以为宫中之事\n事无大小\n悉以咨之\n然后施行\n必能裨补阙漏\n有所广益\n将军向宠\n性行淑均\n晓畅军事\n试用于昔日\n先帝称之曰能\n是以众议举宠为督\n愚以为营中之事\n悉以咨之\n必能使行阵和睦\n优劣得所\n亲贤臣\n远小人\n此先汉所以兴隆也\n亲小人\n远贤臣\n此后汉所以倾颓也\n先帝在时\n每与臣论此事\n未尝不叹息痛恨于桓灵也\n侍中尚书、长史、参军\n此悉贞良死节之臣\n愿陛下亲之信之\n则汉室之隆\n可计日而待也\n臣本布衣\n躬耕于南阳\n苟全性命于乱世\n不求闻达于诸侯\n先帝不以臣卑鄙\n猥自枉屈\n三顾臣于草庐之中\n咨臣以当世之事\n由是感激\n遂许先帝以驱驰\n后值倾覆\n受任于败军之际\n奉命于危难之间\n尔来二十有一年矣\n先帝知臣谨慎\n故临崩寄臣以大事也\n受命以来\n夙夜忧叹\n恐托付不效\n以伤先帝之明\n故五月渡泸\n深入不毛\n今南方已定\n兵甲已足\n当奖率三军\n北定中原\n庶竭驽钝\n攘除奸凶\n兴复汉室\n还于旧都\n此臣所以报先帝而忠陛下之职分也\n至于斟酌损益\n进尽忠言\n则攸之祎、允之任也\n愿陛下托臣以讨贼兴复之效\n不效\n则治臣之罪\n以告先帝之灵\n若无兴德之言\n则责攸之祎、允等之慢\n以彰其咎\n陛下亦宜自谋\n以咨诹善道\n察纳雅言\n深追先帝遗诏\n臣不胜受恩感激\n今当远离\n临表涕零\n不知所言";
+            let data = "On a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\n";
             createPages(data);
-            let pageTurner = new PageTurner();
-            pageTurner.registerEvent();
+            initSession();
+            PageTurner.registerEvent();
         }
     </script>
 </head>

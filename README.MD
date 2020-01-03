@@ -18,11 +18,10 @@
    > 使用edge-chromium浏览器阅读
 - 鼠标悬浮/快捷键显示单词释义
   > 使用有道API，添加一个固定位置的元素即可
-- 显示句子翻译
-  > 同上
 - 选中文本弹出菜单
   > 使用`document.onselectionchange`搭配`onmouseup`, `onmousedown`实现
 - 记录阅读进度
+  > `LocalStorage`中的`getItem, setItem`
 
 ## Todo
 
