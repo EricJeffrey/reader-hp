@@ -1,0 +1,51 @@
+#wordbox {
+    display: block;
+    font-size: 12pt;
+    box-shadow: rgb(80, 80, 80) 1px 2px 3px;
+    border: rgb(78, 78, 78) solid 0.5px;
+    max-width: 15%;
+    padding: 1px;
+    position: absolute;
+    display: none;
+}
+
+#wordbox hr {
+    border-color: rgba(82, 82, 82, 0.3);
+    border-width: 0.5px;
+    border-style: solid;
+    margin: 5px 5px 0px 5px;
+}
+
+#tranbox {
+    margin: 5px;
+}
+
+#toolbox {
+    margin: 0px;
+    display: flex;
+}
+
+#copybox,
+#recordbox {
+    float: left;
+    margin: auto;
+    width: 50%;
+    padding: 6px;
+}
+
+#copybox:hover,
+#recordbox:hover {
+    background-color: rgb(255, 186, 125);
+}
+
+#copybox div,
+#recordbox div {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+}
+
+#toolbox img {
+    height: 16px;
+    margin-right: 5px;
+}

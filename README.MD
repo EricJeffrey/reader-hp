@@ -38,6 +38,8 @@
   - 隐藏并禁用滚动: `body{overflow-x: hidden;}`
   - 隐藏但不禁用: `body:-webkit-scrollbar{display: none}`
 - 横向滚动实现:
+
+  子元素固定高度，父元素禁止Y轴滚动。同时父元素需要手动设置宽度以保证子元素的宽度比例正常。
   - 子元素: `#content{display: flex; width: 300%; height: 100%; overflow-y: hidden}`
   - 父元素: `body{width: 100%; height: 100%; overflow-y: hidden}`
 - 固定宽度、高度
