@@ -44,3 +44,5 @@
   - 父元素: `body{width: 100%; height: 100%; overflow-y: hidden}`
 - 固定宽度、高度
   > 使用`div{width: 100%; height: 100%}`时需要同时制定父元素(包括`body`与`html`)的宽高
+- `clientWidth` 为0
+  > 对于能够滚动的元素，可能需要查看 `offsetWidth` 的值确定其宽度

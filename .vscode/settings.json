@@ -3,5 +3,8 @@
         "[One Dark Pro]": {
             "editor.selectionHighlightBorder": "#555555"
         }
-    }
+    },
+    "todo-tree.filtering.excludeGlobs": [
+        "**/*.MD"
+    ]
 }

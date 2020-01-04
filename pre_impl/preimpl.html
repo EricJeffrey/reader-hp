@@ -48,6 +48,10 @@
             width: 44%;
             height: fit-content;
         }
+
+        .word {
+            height: fit-content;
+        }
     </style>
     <link rel="stylesheet" href="css_preimpl/toolbox.css">
     <script>
@@ -55,6 +59,8 @@
         let classname_lpagediv = "leftpagediv";
         let classname_rpagediv = "rightpagediv";
         let classname_para = "para";
+        let classname_word = "word";
+        let attrPageCurContDiv = "page-current";
 
         function byid(id) {
             return document.getElementById(id);
@@ -66,6 +72,15 @@
             let tmp = document.createElement(tagname);
             tmp.className = classname;
             return tmp;
+        }
+        // 去掉字符串后的 px 并转换为数值
+        function pxstr2number(pxstr) {
+            if (pxstr == null) return null;
+            return Number(pxstr.substring(0, pxstr.length - 2));
+        }
+        // 当前 页 * window.width
+        function currentPageOffset() {
+            return Number(byid("contentdiv").getAttribute(attrPageCurContDiv)) * window.innerWidth;
         }
 
         // 存储 - 记录阅读进度
@@ -82,7 +97,7 @@
         };
 
         // 翻页
-        var PageTurner = {
+        var pageTurner = {
             registerEvent() {
                 window.addEventListener("keydown", (event) => {
                     if (event.code == "PageUp" || event.code == "ArrowLeft") {
@@ -109,7 +124,6 @@
                 });
             },
             prevPage() {
-                let attrPageCurContDiv = "page-current";
                 let contentdiv = byid("contentdiv");
                 let currentPage = Number(contentdiv.getAttribute(attrPageCurContDiv));
                 if (currentPage > 0) {
@@ -119,7 +133,6 @@
                 }
             },
             nextPage() {
-                let attrPageCurContDiv = "page-current";
                 let contentdiv = byid("contentdiv");
                 let currentPage = Number(contentdiv.getAttribute(attrPageCurContDiv));
                 if (currentPage < contentdiv.childElementCount - 1) {
@@ -131,11 +144,101 @@
             }
         };
 
+        var wordTranslator = {
+            // word-mouse-over: 移动到单词 -> 未显示? -> 设置超时 -> 超时显示
+            // window-mouse-over: 已经显示 -> 鼠标不在 box 和 target 上? -> 隐藏
+            //                   未显示 -> 
+            hoverStatus: {
+                target: null,
+                pendingTimoutId: null,
+                WaitTimeInMM: 600
+            },
+            boxStatus: {
+                showing: false,
+                wordSpanTarget: null,
+                box: null
+            },
+            showWordBox: function (wordspan) {
+                let wordBox = byid("wordbox");
+                wordBox.style.top = wordBox.style.bottom = null;
+                wordBox.style.left = wordBox.style.right = null;
+                // 页面横向滚动，offsetLeft 大于 1920， 需要先减去
+                let pageOffset = currentPageOffset();
+                let offsetLeft = wordspan.offsetLeft - pageOffset;
+                wordBox.style.bottom = (window.innerHeight - wordspan.offsetTop) + "px";
+                wordBox.style.left = (pageOffset + offsetLeft) + "px";
+                // 调整box位置，默认 上方向右，必要时调整为 下方向左
+                let stylebox = getComputedStyle(wordBox);
+                // wordspan 太高
+                if (wordspan.offsetTop <= pxstr2number(stylebox.height)) {
+                    wordBox.style.bottom = null;
+                    wordBox.style.top = (wordspan.offsetTop + wordspan.offsetHeight) + "px";
+                }
+                stylebox = getComputedStyle(wordBox);
+                // wordspan 太靠右
+                // console.log("wordspan-offsetWidth: " + wordspan.offsetWidth + ", box-width: " + stylebox.width);
+                if (window.innerWidth - offsetLeft <= pxstr2number(stylebox.width)) {
+                    wordBox.style.left = null;
+                    wordBox.style.right = (pageOffset + offsetLeft + wordspan.offsetWidth) + "px";
+                }
+                wordBox.style.visibility = "visible";
+                this.boxStatus.showing = true;
+                this.boxStatus.wordSpanTarget = wordspan;
+                this.boxStatus.box = wordBox;
+            },
+            hideWordBox: function () {
+                let wordBox = byid("wordbox");
+                wordBox.style.visibility = "hidden";
+                this.boxStatus.showing = false;
+                this.boxStatus.wordSpanTarget = null;
+            },
+            registerEvent: function () {
+                let wordlist = document.getElementsByClassName(classname_word);
+                for (let i = 0; i < wordlist.length; i++) {
+                    const word = wordlist[i];
+                    let _this = this;
+                    word.addEventListener("mouseover", (event) => {
+                        // 已经显示 box 的话，由 window 处理
+                        if (this.boxStatus.showing)
+                            return;
+                        // 正在等待显示，删除超时函数
+                        if (this.hoverStatus.pendingTimoutId != null)
+                            clearTimeout(this.hoverStatus.pendingTimoutId);
+                        this.hoverStatus.target = word;
+                        let timeoutFunc = function () {
+                            // 超时 - 鼠标未移动到其它地方
+                            if (_this.hoverStatus.target == event.target)
+                                _this.showWordBox(word);
+                        };
+                        this.hoverStatus.pendingTimoutId = setTimeout(timeoutFunc, this.hoverStatus.WaitTimeInMM, event);
+                    });
+                }
+                window.addEventListener("mousemove", (event) => {
+                    if (this.boxStatus.showing) {
+                        // 翻译盒子在显示
+                        let inBox = (event, box) => {
+                            let ex = event.clientX, ey = event.clientY;
+                            let left = box.offsetLeft - currentPageOffset(), top = box.offsetTop;
+                            let width = box.clientWidth, height = box.clientHeight;
+                            if (width == 0)
+                                width = box.offsetWidth, height = box.offsetHeight;
+                            return ex >= left && ex <= left + width && ey >= top && ey <= top + height;
+                        }
+                        // 鼠标移动到其它地方了
+                        if (!inBox(event, this.boxStatus.box) && !inBox(event, this.boxStatus.wordSpanTarget))
+                            this.hideWordBox();
+                    }
+                });
+                // FIXME 移动到其它不包含 span 的地方时，仍然会显示翻译盒子
+            }
+        };
+
         var app = {
-            initSession: function () {
+            // 读取阅读进度
+            init: function () {
                 let currentpage = storage.readCurrentPage();
                 let contentdiv = byid("contentdiv");
-                contentdiv.setAttribute("page-current", currentpage);
+                contentdiv.setAttribute(attrPageCurContDiv, currentpage);
                 window.scroll({ top: 0, left: contentdiv.children[currentpage].offsetLeft, behavior: "smooth" });
             },
 
@@ -215,15 +318,12 @@
             },
 
             run() {
-                let data = "On a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\n";
+                let data = "On a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up     through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\n";
                 this.createPages(data);
-                this.initSession();
-                PageTurner.registerEvent();
+                this.init();
+                pageTurner.registerEvent();
+                wordTranslator.registerEvent();
             }
-        };
-
-        var wordTranslator = {
-            // todo 翻译盒子
         };
         // 测试函数
         var tester = {
@@ -265,12 +365,12 @@
                 document.body.innerHTML = "wraplines: " + app.wrapLines(data);
             },
             testDisplayToolbox: function () {
-                // TODO 显示翻译盒的逻辑
+                wordTranslator.registerEvent();
             }
         }
 
         window.onload = () => {
-            // app.run();
+            app.run();
         }
     </script>
 </head>
@@ -289,29 +389,18 @@
         <div id="toolbox">
             <div id="copybox">
                 <div>
-                    <img src="pngs/copy.png" title="复制">复制
+                    <img src="pngs/copy.png" title="复制单词释义">复制
                 </div>
             </div>
             <div id="recordbox">
                 <div>
-                    <img src="pngs/copy.png" title="记录">记录
+                    <img src="pngs/record.png" title="记录这个单词">记录
                 </div>
             </div>
         </div>
     </div>
+
     <div id="contentdiv" page-current="0">
-        <span class="word">On</span>&MediumSpace;
-        <span class="word">a</span>&MediumSpace;
-        <span class="word">dark</span>&MediumSpace;
-        <span class="word">desert</span>&MediumSpace;
-        <span class="word">highway</span>,&MediumSpace;
-        <span class="word">cool</span>&MediumSpace;
-        <span class="word">wind</span>&MediumSpace;
-        <span class="word">in</span>&MediumSpace;
-        <span class="word">my</span>&MediumSpace;
-        <span class="word">hair</span>.
-    </div>
-    <div style="display: none;">
     </div>
 </body>
 
