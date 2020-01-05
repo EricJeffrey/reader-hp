@@ -50,3 +50,6 @@
   > 根本原因在于: 鼠标移动到其它非 `<span class="word">` 时未清除已经设置的 timeout，可以通过如下方式解决
   > - 在 word 上的 `mousemove` 在捕获阶段处理并结束分发: `{capture: true}, event.stopPropagation()`
   > - 在 window 上的 `mousemove` 在，若翻译未显示，就清除已经设置的 timeout
+- 鼠标点击翻译盒子触发翻页
+  > 原因: 鼠标点击翻页的监听器设置到了 window 上  
+  > 解决: 设置到 contentdiv 上即可

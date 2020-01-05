@@ -114,7 +114,8 @@
                     if (event.code == "Space" && !event.shiftKey) this.nextPage();
                 });
                 let validClickWidth = 400;
-                window.addEventListener("click", (event) => {
+                let contentdiv = byid("contentdiv");
+                contentdiv.addEventListener("click", (event) => {
                     if (event.clientX <= validClickWidth) this.prevPage();
                     if (event.clientX >= document.body.clientWidth - validClickWidth) this.nextPage();
                 });
@@ -145,9 +146,10 @@
         };
 
         var wordTranslator = {
-            // word-mouse-over: 移动到单词 -> 未显示? -> 设置超时 -> 超时显示
-            // window-mouse-over: 已经显示 -> 鼠标不在 box 和 target 上? -> 隐藏
-            //                   未显示 -> 
+            // word-mouseover: 移动到单词 -> 未显示? -> 设置超时 -> 超时显示
+            // word-mousemove: 捕获阶段，结束分发
+            // window-mouseover: 已经显示 -> 鼠标不在 box 和 target 上? -> 隐藏
+            //                   未显示 -> 清除已经设置的timeout
             hoverStatus: {
                 target: null,
                 pendingTimoutId: null,
@@ -174,9 +176,9 @@
                 wordBox.style.left = wordBox.style.right = null;
                 // 页面横向滚动，offsetLeft 大于 1920， 需要先减去
                 let pageOffset = currentPageOffset();
-                let offsetLeft = wordspan.offsetLeft - pageOffset;
+                let wordOffsetLeft = wordspan.offsetLeft - pageOffset;
                 wordBox.style.bottom = (window.innerHeight - wordspan.offsetTop) + "px";
-                wordBox.style.left = (pageOffset + offsetLeft) + "px";
+                wordBox.style.left = (pageOffset + wordOffsetLeft) + "px";
                 // 调整box位置，默认 上方向右，必要时调整为 下方向左
                 let stylebox = getComputedStyle(wordBox);
                 // wordspan 太高
@@ -187,9 +189,9 @@
                 stylebox = getComputedStyle(wordBox);
                 // wordspan 太靠右
                 // console.log("wordspan-offsetWidth: " + wordspan.offsetWidth + ", box-width: " + stylebox.width);
-                if (window.innerWidth - offsetLeft <= pxstr2number(stylebox.width)) {
-                    wordBox.style.left = null;
-                    wordBox.style.right = (pageOffset + offsetLeft + wordspan.offsetWidth) + "px";
+                if (window.innerWidth - wordOffsetLeft <= pxstr2number(stylebox.width)) {
+                    wordBox.style.left = (pageOffset + wordOffsetLeft + wordspan.offsetWidth - pxstr2number(stylebox.width)) + "px";
+                    // wordBox.style.right = (pageOffset + wordOffsetLeft + wordspan.offsetWidth) + "px"; 
                 }
                 wordBox.style.visibility = "visible";
                 this.boxStatus.showing = true;
@@ -237,7 +239,8 @@
                         // 鼠标移动到其它地方了
                         if (!inBox(event, this.boxStatus.box) && !inBox(event, this.boxStatus.wordSpanTarget))
                             this.hideWordBox();
-                    } else {
+                    }
+                    else {
                         this.hoverStatus.clearPending();
                     }
                 });
