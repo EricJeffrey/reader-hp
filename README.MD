@@ -46,3 +46,7 @@
   > 使用`div{width: 100%; height: 100%}`时需要同时制定父元素(包括`body`与`html`)的宽高
 - `clientWidth` 为0
   > 对于能够滚动的元素，可能需要查看 `offsetWidth` 的值确定其宽度
+- 鼠标移动到其它地方，`setTimeOut` 仍然触发
+  > 根本原因在于: 鼠标移动到其它非 `<span class="word">` 时未清除已经设置的 timeout，可以通过如下方式解决
+  > - 在 word 上的 `mousemove` 在捕获阶段处理并结束分发: `{capture: true}, event.stopPropagation()`
+  > - 在 window 上的 `mousemove` 在，若翻译未显示，就清除已经设置的 timeout

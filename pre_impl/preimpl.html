@@ -151,7 +151,17 @@
             hoverStatus: {
                 target: null,
                 pendingTimoutId: null,
-                WaitTimeInMM: 600
+                WaitTimeInMM: 600,
+                clearPending: function () {
+                    if (this.pendingTimoutId != null)
+                        clearTimeout(this.pendingTimoutId);
+                    this.pendingTimoutId = null;
+                    this.target = null;
+                },
+                setPending: function (target, pendingId) {
+                    this.target = target;
+                    this.pendingTimoutId = pendingId;
+                }
             },
             boxStatus: {
                 showing: false,
@@ -202,16 +212,16 @@
                         if (this.boxStatus.showing)
                             return;
                         // 正在等待显示，删除超时函数
-                        if (this.hoverStatus.pendingTimoutId != null)
-                            clearTimeout(this.hoverStatus.pendingTimoutId);
-                        this.hoverStatus.target = word;
+                        this.hoverStatus.clearPending();
                         let timeoutFunc = function () {
                             // 超时 - 鼠标未移动到其它地方
-                            if (_this.hoverStatus.target == event.target)
-                                _this.showWordBox(word);
+                            if (_this.hoverStatus.target == event.target) _this.showWordBox(word);
                         };
-                        this.hoverStatus.pendingTimoutId = setTimeout(timeoutFunc, this.hoverStatus.WaitTimeInMM, event);
+                        this.hoverStatus.setPending(word, setTimeout(timeoutFunc, this.hoverStatus.WaitTimeInMM, event));
                     });
+                    word.addEventListener("mousemove", (event) => {
+                        event.stopPropagation();
+                    }, { capture: true });
                 }
                 window.addEventListener("mousemove", (event) => {
                     if (this.boxStatus.showing) {
@@ -227,9 +237,10 @@
                         // 鼠标移动到其它地方了
                         if (!inBox(event, this.boxStatus.box) && !inBox(event, this.boxStatus.wordSpanTarget))
                             this.hideWordBox();
+                    } else {
+                        this.hoverStatus.clearPending();
                     }
                 });
-                // FIXME 移动到其它不包含 span 的地方时，仍然会显示翻译盒子
             }
         };
 
@@ -366,6 +377,22 @@
             },
             testDisplayToolbox: function () {
                 wordTranslator.registerEvent();
+            },
+            // 测试事件 捕获阶段 与 冒泡阶段 触发的监听器
+            // 默认 capture 为 false，事件为冒泡阶段的事件
+            testBubbleEvent: function () {
+                window.addEventListener("click", (event) => {
+                    console.log("capture: false");
+                }, { capture: false });
+                window.addEventListener("click", (event) => {
+                    console.log("capture: true");
+                }, { capture: true });
+                byid("bubbleTestButton").addEventListener("click", (event) => {
+                    console.log("button, capture: false");
+                }, { capture: false });
+                byid("bubbleTestButton").addEventListener("click", (event) => {
+                    console.log("button, capture: true");
+                }, { capture: true });
             }
         }
 
