@@ -12,7 +12,7 @@
 
 #wordbox {
     animation: boxanimation_show 0.5s;
-    background-color: sandybrown;
+    background-color: whitesmoke;
     display: block;
     font-size: 12pt;
     box-shadow: rgb(34, 34, 34) 1px 2px 3px;
@@ -21,6 +21,7 @@
     position: absolute;
     visibility: hidden;
     z-index: 1;
+    cursor: default;
 }
 
 #wordbox hr {
@@ -32,6 +33,7 @@
 
 #tranbox {
     margin: 5px;
+    cursor: text;
 }
 
 #toolbox {
@@ -49,7 +51,7 @@
 
 #copybox:hover,
 #recordbox:hover {
-    background-color: rgb(255, 186, 125);
+    background-color: rgb(212, 212, 212);
 }
 
 #copybox div,

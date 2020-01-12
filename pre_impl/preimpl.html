@@ -13,7 +13,7 @@
         }
 
         body {
-            background-color: sandybrown;
+            background-color: whitesmoke;
             font-size: 18pt;
             font-family: 'Times New Roman', '等线', Times, serif;
             width: 100%;
@@ -62,7 +62,7 @@
             height: fit-content;
         }
 
-        .para{
+        .para {
             margin: 16px;
         }
 
@@ -71,6 +71,7 @@
         }
     </style>
     <link rel="stylesheet" href="css_preimpl/toolbox.css">
+    <link rel="stylesheet" href="css_preimpl/sentencebox.css">
     <script>
         let classname_pagediv = "pagediv";
         let classname_lpagediv = "leftpagediv";
@@ -232,6 +233,9 @@
                         // 已经显示 box 的话，由 window 处理
                         if (this.boxStatus.showing)
                             return;
+                        // 已经开始选择文本，屏蔽wordbox
+                        if (sentenceTool.selectStatus.selecting)
+                            return;
                         // 正在等待显示，删除超时函数
                         this.hoverStatus.clearPending();
                         let timeoutFunc = function () {
@@ -247,7 +251,7 @@
                 window.addEventListener("mousemove", (event) => {
                     if (this.boxStatus.showing) {
                         // 翻译盒子在显示
-                        let inBox = (event, box) => {
+                        let inWordBox = (event, box) => {
                             let ex = event.clientX, ey = event.clientY;
                             let left = box.offsetLeft - currentPageOffset(), top = box.offsetTop;
                             let width = box.clientWidth, height = box.clientHeight;
@@ -256,18 +260,89 @@
                             return ex >= left && ex <= left + width && ey >= top && ey <= top + height;
                         }
                         // 鼠标移动到其它地方了
-                        if (!inBox(event, this.boxStatus.box) && !inBox(event, this.boxStatus.wordSpanTarget))
+                        if (!inWordBox(event, this.boxStatus.box) && !inWordBox(event, this.boxStatus.wordSpanTarget))
                             this.hideWordBox();
                     }
                     else {
                         this.hoverStatus.clearPending();
                     }
                 });
+            },
+            copy: function () {
+                console.log("copy word: " + this.boxStatus.wordSpanTarget.innerText);
+                this.hideWordBox();
+            },
+            record: function () {
+                console.log("record word: " + this.boxStatus.wordSpanTarget.innerText);
+                this.hideWordBox();
             }
         };
         // 句子记录
         var sentenceTool = {
-            // todo: 选中句子显示工具
+            selectStatus: {
+                selectStart: false,
+                selecting: false,
+                selection: "",
+                setSelectStatus: function (selecting) {
+                    this.selecting = selecting;
+                    if (selecting == false)
+                        this.selectStart = false;
+                }
+            },
+            boxStatus: {
+                showing: false,
+                selection: "",
+                sentencebox: null
+            },
+            showSentenceBox: function (x, y) {
+                let box = byid("sentencebox");
+                let pageOffset = currentPageOffset();
+                box.style.left = (pageOffset + x + 2) + "px";
+                box.style.bottom = (window.innerHeight - y + 15) + "px";
+                box.style.visibility = "visible";
+                this.boxStatus.showing = true;
+                this.boxStatus.selection = this.selectStatus.selection;
+                this.boxStatus.showing = true;
+            },
+            hideSenetenceBox: function () {
+                let box = byid("sentencebox");
+                box.style.visibility = "hidden";
+                this.boxStatus.showing = false;
+                this.boxStatus.selection = "";
+                this.boxStatus.sentencebox = null;
+            },
+            registerEvent: function () {
+                let contentdiv = byid("contentdiv");
+                let _this = this;
+                contentdiv.onselectstart = function () {
+                    _this.selectStatus.selectStart = true;
+                };
+                document.onselectionchange = function () {
+                    if (_this.selectStatus.selectStart) {
+                        _this.selectStatus.setSelectStatus(true);
+                        _this.selectStatus.selection = document.getSelection().toString();
+                    }
+                };
+                contentdiv.onmouseup = function (event) {
+                    if (_this.selectStatus.selecting && _this.selectStatus.selection != "") {
+                        _this.showSentenceBox(event.clientX, event.clientY);
+                    }
+                    _this.selectStatus.setSelectStatus(false);
+                };
+                contentdiv.onmousedown = function (event) {
+                    if (_this.boxStatus.showing) {
+                        _this.hideSenetenceBox();
+                    }
+                };
+            },
+            copy: function () {
+                console.log("copy sentence: " + this.boxStatus.selection);
+                this.hideSenetenceBox();
+            },
+            record: function () {
+                console.log("record sentence: " + this.boxStatus.selection);
+                this.hideSenetenceBox();
+            }
         };
 
         var app = {
@@ -310,7 +385,7 @@
             },
             // 创建多个页，内容为data，data的每一行表示一个段落，data为span组成的字符串
             createPages: function (data = "") {
-                let linelist = this.wrapLines(data);
+                let linelist = data;
                 let paralist = [];
                 // all <p>
                 linelist.forEach(line => {
@@ -334,7 +409,6 @@
                     contentdiv.style.width = (widthinitcontentdiv + widthcurcontentdiv) * 100 + "%";
                     // left/right-page-div
                     let targetheight = pagediv.clientHeight;
-                    console.log("pagediv.clientHeight: " + targetheight);
                     let leftpagediv = create("div", classname_lpagediv);
                     let rightpagediv = create("div", classname_rpagediv);
                     pagediv.appendChild(leftpagediv);
@@ -363,11 +437,12 @@
             },
             // 加载数据 - 显示每一页 - 注册监听器...
             run() {
-                let data = "On a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up     through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\n";
-                this.createPages(data);
+                let data = "Speaking quietly so that no one else would hear, Harry told the other two about Snape's sudden, sinister desire to be a Quidditch referee.\n\"Don't play,\" said Hermione at once.\n\"Say you're ill,\" said Ron.\n\"Pretend to break your leg,\" Hermione suggested.\n\"Really break your leg,\" said Ron.\n\"I can't,\" said Harry. \"There isn't a reserve Seeker. If I back out, Gryffindor can't play at all.\"\nAt that moment Neville toppled into the common room. How he had managed to climb through the portrait hole was anyone's guess, because his legs had been stuck together with what they recognized at once as the Leg-Locker Curse. He must have had to bunny hop all the way up to Gryffindor tower.\nEveryone fell over laughing except Hermione, who leapt up and performed the countercurse. Neville's legs sprang apart and he got to his feet, trembling. \"What happened?\" Hermione asked him, leading him over to sit with Harry and Ron.\n\"Malfoy,\" said Neville shakily. \"I met him outside the library. He said he'd been looking for someone to practice that on.\"\n\"Go to Professor McGonagall!\" Hermione urged Neville. \"Report him!\"\nNeville shook his head.\n\"I don't want more trouble,\" he mumbled.\n\"You've got to stand up to him, Neville!\" said Ron. \"He's used to walking all over people, but that's no reason to lie down in front of him and make it easier.\"\n\"There's no need to tell me I'm not brave enough to be in Gryffindor, Malfoy's already done that,\" Neville choked out.\nHarry felt in the pocket of his robes and pulled out a Chocolate Frog, the very last one from the box Hermione had given him for Christmas. He gave it to Neville, who looked as though he might cry.\n\"You're worth twelve of Malfoy,\" Harry said. \"The Sorting Hat chose you for Gryffindor, didn't it? And where's Malfoy? In stinking Slytherin.\"\nNeville's lips twitched in a weak smile as he unwrapped the frog.\n\"Thanks, Harry... I think I'll go to bed.... D'you want the card, you collect them, don't you?\"\nAs Neville walked away, Harry looked at the Famous Wizard card.\n\"Dumbledore again,\" he said, \"He was the first one I ever-\"\nHe gasped. He stared at the back of the card. Then he looked up at Ron and Hermione.\n\"I've found him!\" he whispered. \"I've found Flamel! I told you I'd read the name somewhere before, I read it on the train coming here -- listen to this: 'Dumbledore is particularly famous for his defeat of the dark wizard Grindelwald in 1945, for the discovery of the twelve uses of dragon's blood, and his work on alchemy with his partner, Nicolas Flamel'!\"\nHermione jumped to her feet. She hadn't looked so excited since they'd gotten back the marks for their very first piece of homework.\n\"Stay there!\" she said, and she sprinted up the stairs to the girls' dormitories. Harry and Ron barely had time to exchange mystified looks before she was dashing back, an enormous old book in her arms.\n\"I never thought to look in here!\" she whispered excitedly. \"I got this out of the library weeks ago for a bit of light reading.\"\n\"Light?\" said Ron, but Hermione told him to be quiet until she'd looked something up, and started flicking frantically through the pages, muttering to herself.\nAt last she found what she was looking for.\n\"I knew it! I knew it!\"\n\"Are we allowed to speak yet?\" said Ron grumpily. Hermione ignored him.\n\"Nicolas Flamel,\" she whispered dramatically, \"is the only known maker of the Sorcerer's Stone!\"\nThis didn't have quite the effect she'd expected.\n\"The what?\" said Harry and Ron.\n\"Oh, honestly, don't you two read? Look -- read that, there.\"\nShe pushed the book toward them, and Harry and Ron read: The ancient study of alchemy is concerned with making the Sorcerer's Stone, a legendary substance with astonishing powers. The stone will transform any metal into pure gold. It also produces the Elixir of Life, which will make the drinker immortal.\nThere have been many reports of the Sorcerer's Stone over the centuries, but the only Stone currently in existence belongs to Mr. Nicolas Flamel, the noted alchemist and opera lover. Mr. Flamel, who celebrated his six hundred and sixty-fifth birthday last year, enjoys a quiet life in Devon with his wife, Perenelle (six hundred and fifty-eight).\n\"See?\" said Hermione, when Harry and Ron had finished. \"The dog must be guarding Flamel's Sorcerer's Stone! I bet he asked Dumbledore to keep it safe for him, because they're friends and he knew someone was after it, that's why he wanted the Stone moved out of Gringotts!\"\n\"A stone that makes gold and stops you from ever dying!\" said Harry. \"No wonder Snape's after it! Anyone would want it.\"\n\"And no wonder we couldn't find Flamel in that Study of Recent Developments in Wizardry,\" said Ron. \"He's not exactly recent if he's six hundred and sixty-five, is he?\"\nThe next morning in Defense Against the Dark Arts, while copying down different ways of treating werewolf bites, Harry and Ron were still discussing what they'd do with a Sorcerer's Stone if they had one. It wasn't until Ron said he'd buy his own Quidditch team that Harry remembered about Snape and the coming match.\n\"I'm going to play,\" he told Ron and Hermione. \"If I don't, all the Slytherins will think I'm just too scared to face Snape. I'll show them... it'll really wipe the smiles off their faces if we win.\"\n\"Just as long as we're not wiping you off the field,\" said Hermione.\nAs the match drew nearer, however, Harry became more and more nervous, whatever he told Ron and Hermione. The rest of the team wasn't too calm, either. The idea of overtaking Slytherin in the house championship was wonderful, no one had done it for seven years, but would they be allowed to, with such a biased referee?\nHarry didn't know whether he was imagining it or not, but he seemed to keep running into Snape wherever he went. At times, he even wondered whether Snape was following him, trying to catch him on his own. Potions lessons were turning into a sort of weekly torture, Snape was so horrible to Harry. Could Snape possibly know they'd found out about the Sorcerer's Stone? Harry didn't see how he could -- yet he sometimes had the horrible feeling that Snape could read minds.\nHarry knew, when they wished him good luck outside the locker rooms the next afternoon, that Ron and Hermione were wondering whether they'd ever see him alive again. This wasn't what you'd call comforting. Harry hardly heard a word of Wood's pep talk as he pulled on his Quidditch robes and picked up his Nimbus Two Thousand.\nRon and Hermione, meanwhile, had found a place in the stands next to Neville, who couldn't understand why they looked so grim and worried, or why they had both brought their wands to the match. Little did Harry know that Ron and Hermione had been secretly practicing the Leg-Locker Curse. They'd gotten the idea from Malfoy using it on Neville, and were ready to use it on Snape if he showed any sign of wanting to hurt Harry.\n\"Now, don't forget, it's Locomotor Mortis,\" Hermione muttered as Ron slipped his wand up his sleeve.\n\"I know,\" Ron snapped. \"Don't nag.\"\nBack in the locker room, Wood had taken Harry aside.\n\"Don't want to pressure you, Potter, but if we ever need an early capture of the Snitch it's now. Finish the game before Snape can favor Hufflepuff too much.\"\n\"The whole school's out there!\" said Fred Weasley, peering out of the door. \"Even -- blimey -- Dumbledore's come to watch!\"\nHarry's heart did a somersault.\n\"Dumbledore?\" he said, dashing to the door to make sure. Fred was right. There was no mistaking that silver beard.\nHarry could have laughed out loud with relief He was safe. There was simply no way that Snape would dare to try to hurt him if Dumbledore was watching.\nPerhaps that was why Snape was looking so angry as the teams marched onto the field, something that Ron noticed, too.\n\"I've never seen Snape look so mean,\" he told Hermione. \"Look -they're off Ouch!\"\nSomeone had poked Ron in the back of the head. It was Malfoy.\n\"Oh, sorry, Weasley, didn't see you there.\"\nMalfoy grinned broadly at Crabbe and Goyle.\n\"Wonder how long Potter's going to stay on his broom this time? Anyone want a bet? What about you, Weasley?\"\nRon didn't answer; Snape had just awarded Hufflepuff a penalty because George Weasley had hit a Bludger at him. Hermione, who had all her fingers crossed in her lap, was squinting fixedly at Harry, who was circling the game like a hawk, looking for the Snitch.\n\"You know how I think they choose people for the Gryffindor team?\" said Malfoy loudly a few minutes later, as Snape awarded Hufflepuff another penalty for no reason at all. \"It's people they feel sorry for. See, there's Potter, who's got no parents, then there's the Weasleys, who've got no money -- you should be on the team, Longbottom, you've got no brains.\"\nNeville went bright red but turned in his seat to face Malfoy.\n\"I'm worth twelve of you, Malfoy,\" he stammered.\nMalfoy, Crabbe, and Goyle howled with laughter, but Ron, still not daring to take his eyes from the game, said, \"You tell him, Neville.\"\n\"Longbottom, if brains were gold you'd be poorer than Weasley, and that's saying something.\"\nRon's nerves were already stretched to the breaking point with anxiety about Harry.\n\"I'm warning you, Malfoy -- one more word\n\"Ron!\" said Hermione suddenly, \"Harry --\"\n\"What? Where?\"";
+                this.createPages(this.wrapLines(data));
                 this.init();
                 pageTurner.registerEvent();
                 wordTranslateTool.registerEvent();
+                sentenceTool.registerEvent();
             }
         };
         // 测试函数
@@ -435,12 +510,17 @@
                 pageTurner.registerEvent();
                 wordTranslateTool.registerEvent();
             },
-
+            // 测试左右两栏页面的更好的显示方式
+            testSentenceBox: function () {
+                let data = "On a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up     through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\n";
+                app.createPages(app.wrapLines(data));
+                wordTranslateTool.registerEvent();
+                sentenceTool.registerEvent();
+            },
         }
 
         window.onload = () => {
             app.run();
-            // tester.testCurPageDiv();
         }
     </script>
 </head>
@@ -457,19 +537,32 @@
         </div>
         <hr>
         <div id="toolbox">
-            <div id="copybox">
+            <div id="copybox" onclick="wordTranslateTool.copy()">
                 <div>
-                    <img src="pngs/copy.png" title="复制单词释义">复制
+                    <img src="imgs/copy.png" title="复制单词释义">复制
                 </div>
             </div>
-            <div id="recordbox">
+            <div id="recordbox" onclick="wordTranslateTool.record()">
                 <div>
-                    <img src="pngs/record.png" title="记录这个单词">记录
+                    <img src="imgs/record.png" title="记录单词释义">记录
                 </div>
             </div>
         </div>
     </div>
-
+    <div id="sentencebox">
+        <div id="toolbox">
+            <div id="copybox" onclick="sentenceTool.copy()">
+                <div>
+                    <img src="imgs/copy.png" title="复制所选内容">复制
+                </div>
+            </div>
+            <div id="recordbox" onclick="sentenceTool.record()">
+                <div>
+                    <img src="imgs/record.png" title="记录所选内容">记录
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="contentdiv" page-current="0">
     </div>
 </body>
