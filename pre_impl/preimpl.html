@@ -28,11 +28,34 @@
             display: none;
         }
 
+        htitle {
+            font-family: "Harry P";
+            font-weight: bold;
+            font-size: 2.5em;
+        }
+
+        chtitle {
+            font-size: 1.5em;
+            font-family: "Harry P";
+            font-weight: bold;
+        }
+
         #contentdiv {
             display: flex;
-            width: 100%;
+            width: 0%;
             height: 100%;
             overflow-y: hidden;
+        }
+
+        #loadingdiv {
+            top: 0;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            width: fit-content;
+            height: fit-content;
+            margin: auto;
+            position: absolute;
         }
 
         .pagewrapperdiv {
@@ -82,28 +105,93 @@
         let classname_para = "para";
         let classname_word = "word";
         let attrPageCurContDiv = "page-current";
+        let num2engword = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE",
+            "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY", "TWENTY-ONE", "TWENTY-TWO",
+            "TWENTY-THREE", "TWENTY-FOUR", "TWENTY-FIVE", "TWENTY-SIX", "TWENTY-SEVEN", "TWENTY-EIGHT", "TWENTY-NINE", "THIRTY",
+            "THIRTY-ONE", "THIRTY-TWO", "THIRTY-THREE", "THIRTY-FOUR", "THIRTY-FIVE", "THIRTY-SIX", "THIRTY-SEVEN", "THIRTY-EIGHT",
+            "THIRTY-NINE", "FORTY", "FORTY-ONE", "FORTY-TWO", "FORTY-THREE", "FORTY-FOUR", "FORTY-FIVE", "FORTY-SIX", "FORTY-SEVEN",
+            "FORTY-EIGHT", "FORTY-NINE", "FIFTY", "FIFTY-ONE", "FIFTY-TWO", "FIFTY-THREE", "FIFTY-FOUR", "FIFTY-FIVE", "FIFTY-SIX",
+            "FIFTY-SEVEN", "FIFTY-EIGHT", "FIFTY-NINE", "SIXTY", "SIXTY-ONE", "SIXTY-TWO", "SIXTY-THREE", "SIXTY-FOUR", "SIXTY-FIVE",
+            "SIXTY-SIX", "SIXTY-SEVEN", "SIXTY-EIGHT", "SIXTY-NINE", "SEVENTY", "SEVENTY-ONE", "SEVENTY-TWO", "SEVENTY-THREE",
+            "SEVENTY-FOUR", "SEVENTY-FIVE", "SEVENTY-SIX", "SEVENTY-SEVEN", "SEVENTY-EIGHT", "SEVENTY-NINE", "EIGHTY", "EIGHTY-ONE",
+            "EIGHTY-TWO", "EIGHTY-THREE", "EIGHTY-FOUR", "EIGHTY-FIVE", "EIGHTY-SIX", "EIGHTY-SEVEN", "EIGHTY-EIGHT", "EIGHTY-NINE",
+            "NINETY", "NINETY-ONE", "NINETY-TWO", "NINETY-THREE", "NINETY-FOUR", "NINETY-FIVE", "NINETY-SIX", "NINETY-SEVEN", "NINETY-EIGHT",
+            "NINETY-NINE", "HUNDRED"];
 
-        function byid(id) {
-            return document.getElementById(id);
-        }
-        function byclass(classname, index) {
-            return document.getElementsByClassName(classname)[index];
-        }
-        function create(tagname, classname) {
-            let tmp = document.createElement(tagname);
-            tmp.className = classname;
-            return tmp;
-        }
-        // 去掉字符串后的 px 并转换为数值
-        function pxstr2number(pxstr) {
-            if (pxstr == null) return null;
-            return Number(pxstr.substring(0, pxstr.length - 2));
-        }
-        // 当前 页 * window.width
-        function currentPageOffset() {
-            return Number(byid("contentdiv").getAttribute(attrPageCurContDiv)) * window.innerWidth;
-        }
-
+        var utility = {
+            typeWrapper: {
+                htitle: "htitle",
+                chtitle: "chtitle"
+            },
+            byid: function byid(id) {
+                return document.getElementById(id);
+            },
+            byclass: function byclass(classname, index) {
+                return document.getElementsByClassName(classname)[index];
+            },
+            create: function create(tagname, classname) {
+                let tmp = document.createElement(tagname);
+                tmp.className = classname;
+                return tmp;
+            },
+            // 去掉字符串后的 px 并转换为数值
+            pxstr2number: function pxstr2number(pxstr) {
+                if (pxstr == null) return null;
+                return Number(pxstr.substring(0, pxstr.length - 2));
+            },
+            // 当前 页 * window.width
+            currentPageOffset: function currentPageOffset() {
+                return Number(utility.byid("contentdiv").getAttribute(attrPageCurContDiv)) * window.innerWidth;
+            },
+            // 将 title 加上对应的标签 <htitle> 或者 <chtitle>
+            wrapTitle: function (title, type, chapter_index) {
+                let ret = "";
+                switch (type) {
+                    case this.typeWrapper.htitle:
+                        ret = "<htitle>" + title + "</htitle>";
+                        break;
+                    case this.typeWrapper.chtitle:
+                        ret = "<chtitle>CHAPTER " + num2engword[chapter_index] + " - " + title + "</chtitle>";
+                        break;
+                    default:
+                        break;
+                }
+                return ret;
+            },
+            // 将 line 中由空格隔开的串加上 <span class="word"> 标签
+            wrapLine: function (line) {
+                let wordlist = line.split(' ');
+                var tmpresline = "";
+                wordlist.forEach(word => {
+                    let lenword = word.length;
+                    if (lenword != 0 && word.match("[a-zA-Z]") != null) {
+                        // 去掉前后的符号
+                        let revword = "";
+                        for (let i = 0; i < lenword; i++)
+                            revword += word[lenword - i - 1];
+                        let startpos = word.match("[a-zA-Z]").index;
+                        // 从后往前数第一次出现字母的位置
+                        let endpos = revword.match("[a-zA-Z]").index;
+                        endpos = lenword - endpos;
+                        if (startpos != 0) tmpresline += word.substring(0, startpos);
+                        tmpresline += "<span class=\"word\">" + word.substring(startpos, endpos) + "</span>";
+                        if (endpos < lenword) tmpresline += word.substring(endpos, lenword);
+                    } else {
+                        tmpresline += word;
+                    }
+                    tmpresline += " ";
+                });
+                return tmpresline;
+            },
+            // 将 lines 中的每一行都加上 span  标签
+            wrapLines: function (lines) {
+                let reslines = [];
+                lines.forEach(line => {
+                    reslines.push(this.wrapLine(line));
+                });
+                return reslines;
+            }
+        };
         // 存储 - 记录阅读进度
         var storage = {
             StrKeyCurrentPage: "page-current",
@@ -134,7 +222,7 @@
                     if (event.code == "Space" && event.shiftKey) this.prevPage();
                     if (event.code == "Space" && !event.shiftKey) this.nextPage();
                 });
-                let contentdiv = byid("contentdiv");
+                let contentdiv = utility.byid("contentdiv");
                 contentdiv.addEventListener("click", (event) => {
                     if (event.clientX <= this.validClickWidth) this.prevPage();
                     if (event.clientX >= document.body.clientWidth - this.validClickWidth) this.nextPage();
@@ -145,7 +233,7 @@
                 });
             },
             prevPage() {
-                let contentdiv = byid("contentdiv");
+                let contentdiv = utility.byid("contentdiv");
                 let currentPage = Number(contentdiv.getAttribute(attrPageCurContDiv));
                 if (currentPage > 0) {
                     contentdiv.setAttribute(attrPageCurContDiv, currentPage - 1);
@@ -154,7 +242,7 @@
                 }
             },
             nextPage() {
-                let contentdiv = byid("contentdiv");
+                let contentdiv = utility.byid("contentdiv");
                 let currentPage = Number(contentdiv.getAttribute(attrPageCurContDiv));
                 if (currentPage < contentdiv.childElementCount - 1) {
                     contentdiv.setAttribute(attrPageCurContDiv, currentPage + 1);
@@ -192,35 +280,38 @@
                 box: null
             },
             showWordBox: function (wordspan) {
-                let wordBox = byid("wordbox");
+                let wordBox = utility.byid("wordbox");
                 wordBox.style.top = wordBox.style.bottom = null;
                 wordBox.style.left = wordBox.style.right = null;
                 // 页面横向滚动，offsetLeft 大于 1920， 需要先减去
-                let pageOffset = currentPageOffset();
+                let pageOffset = utility.currentPageOffset();
                 let wordOffsetLeft = wordspan.offsetLeft - pageOffset;
                 wordBox.style.bottom = (window.innerHeight - wordspan.offsetTop) + "px";
                 wordBox.style.left = (pageOffset + wordOffsetLeft) + "px";
                 // 调整box位置，默认 上方向右，必要时调整为 下方向左
                 let stylebox = getComputedStyle(wordBox);
                 // wordspan 太高
-                if (wordspan.offsetTop <= pxstr2number(stylebox.height)) {
+                if (wordspan.offsetTop <= utility.pxstr2number(stylebox.height)) {
                     wordBox.style.bottom = null;
                     wordBox.style.top = (wordspan.offsetTop + wordspan.offsetHeight) + "px";
                 }
                 stylebox = getComputedStyle(wordBox);
                 // wordspan 太靠右
-                // console.log("wordspan-offsetWidth: " + wordspan.offsetWidth + ", box-width: " + stylebox.width);
-                if (window.innerWidth - wordOffsetLeft <= pxstr2number(stylebox.width)) {
-                    wordBox.style.left = (pageOffset + wordOffsetLeft + wordspan.offsetWidth - pxstr2number(stylebox.width)) + "px";
+                if (window.innerWidth - wordOffsetLeft <= utility.pxstr2number(stylebox.width)) {
+                    wordBox.style.left = (pageOffset + wordOffsetLeft + wordspan.offsetWidth - utility.pxstr2number(stylebox.width)) + "px";
                     // wordBox.style.right = (pageOffset + wordOffsetLeft + wordspan.offsetWidth) + "px"; 
                 }
                 wordBox.style.visibility = "visible";
+                wordBox.style.animation = "boxanimation_show 0.2s";
+                wordBox.style.opacity = "1";
                 this.boxStatus.showing = true;
                 this.boxStatus.wordSpanTarget = wordspan;
                 this.boxStatus.box = wordBox;
             },
             hideWordBox: function () {
-                let wordBox = byid("wordbox");
+                let wordBox = utility.byid("wordbox");
+                wordBox.style.opacity = "0";
+                wordBox.style.animation = "none";
                 wordBox.style.visibility = "hidden";
                 this.boxStatus.showing = false;
                 this.boxStatus.wordSpanTarget = null;
@@ -254,7 +345,7 @@
                         // 翻译盒子在显示
                         let inWordBox = (event, box) => {
                             let ex = event.clientX, ey = event.clientY;
-                            let left = box.offsetLeft - currentPageOffset(), top = box.offsetTop;
+                            let left = box.offsetLeft - utility.currentPageOffset(), top = box.offsetTop;
                             let width = box.clientWidth, height = box.clientHeight;
                             if (width == 0)
                                 width = box.offsetWidth, height = box.offsetHeight;
@@ -296,24 +387,28 @@
                 sentencebox: null
             },
             showSentenceBox: function (x, y) {
-                let box = byid("sentencebox");
-                let pageOffset = currentPageOffset();
+                let box = utility.byid("sentencebox");
+                let pageOffset = utility.currentPageOffset();
                 box.style.left = (pageOffset + x + 2) + "px";
                 box.style.bottom = (window.innerHeight - y + 15) + "px";
                 box.style.visibility = "visible";
+                box.style.animation = "boxanimation_show 0.2s";
+                box.style.opacity = "1";
                 this.boxStatus.showing = true;
                 this.boxStatus.selection = this.selectStatus.selection;
                 this.boxStatus.showing = true;
             },
             hideSenetenceBox: function () {
-                let box = byid("sentencebox");
+                let box = utility.byid("sentencebox");
                 box.style.visibility = "hidden";
+                box.style.animation = "none";
+                box.style.opacity = "0";
                 this.boxStatus.showing = false;
                 this.boxStatus.selection = "";
                 this.boxStatus.sentencebox = null;
             },
             registerEvent: function () {
-                let contentdiv = byid("contentdiv");
+                let contentdiv = utility.byid("contentdiv");
                 let _this = this;
                 contentdiv.onselectstart = function () {
                     _this.selectStatus.selectStart = true;
@@ -347,79 +442,50 @@
         };
         // todo 分章节加载，前后端接口，字典后端
         var dataLoader = {
-            loadArticle: function (onsuccess) {
-                $.get("tmp.txt", (data, status) => {
-                    console.log(status + ", " + data.length);
-                    onsuccess(data);
-                });
+            loadArticle: function (onsuccess, onfailed) {
+                $.get("tmpp.json", (data, status) => {
+                    console.log(status);
+                    if (status == "success") onsuccess(data);
+                    else onfailed(data, status);
+                }).fail(onfailed);
             },
         };
         var app = {
             // 读取阅读进度
             init: function () {
                 let currentpage = storage.readCurrentPage();
-                let contentdiv = byid("contentdiv");
+                let contentdiv = utility.byid("contentdiv");
                 contentdiv.setAttribute(attrPageCurContDiv, currentpage);
                 window.scroll({ top: 0, left: contentdiv.children[currentpage].offsetLeft, behavior: "smooth" });
             },
-            // 将data中由空格隔开的串加上span标签
-            wrapLines: function (data = "") {
-                let linelist = data.split("\n");
-                let resspanlist = [];
-                linelist.forEach(line => {
-                    let wordlist = line.split(' ');
-                    var tmpresline = "";
-                    wordlist.forEach(word => {
-                        let lenword = word.length;
-                        if (lenword != 0 && word.match("[a-zA-Z]") != null) {
-                            // 去掉前后的符号
-                            let revword = "";
-                            for (let i = 0; i < lenword; i++)
-                                revword += word[lenword - i - 1];
-                            let startpos = word.match("[a-zA-Z]").index;
-                            // 从后往前数第一次出现字母的位置
-                            let endpos = revword.match("[a-zA-Z]").index;
-                            endpos = lenword - endpos;
-                            if (startpos != 0) tmpresline += word.substring(0, startpos);
-                            tmpresline += "<span class=\"word\">" + word.substring(startpos, endpos) + "</span>";
-                            if (endpos < lenword) tmpresline += word.substring(endpos, lenword);
-                        } else {
-                            tmpresline += word;
-                        }
-                        tmpresline += " ";
-                    });
-                    resspanlist.push(tmpresline);
-                });
-                return resspanlist;
-            },
-            // 创建多个页，内容为data，data的每一行表示一个段落，data为span组成的字符串
-            createPages: function (data = "") {
+            // 创建多个页，内容为data，data的每一行表示一个段落，data为span组成的字符串，创建的页会 append 到 contentdiv 中
+            appendPages: function (data = ["oops, something's wrong"]) {
                 let linelist = data;
                 let paralist = [];
                 // all <p>
                 linelist.forEach(line => {
-                    let para = create("p", classname_para);
+                    let para = utility.create("p", classname_para);
                     para.innerHTML = line;
                     paralist.push(para);
                 });
 
-                let contentdiv = byid("contentdiv");
-                let widthinitcontentdiv = 0;
-                let widthcurcontentdiv = 0;
+                let contentdiv = utility.byid("contentdiv");
+                let pagesinitcontentdiv = contentdiv.clientWidth / window.innerWidth;
+                let pagescurcontentdiv = 0;
                 let indexpara = 0;
                 while (indexpara < paralist.length) {
                     // 最外层 div = page-div + current-page-div
-                    let pagewrapperdiv = create("div", classname_pagewrapperdiv);
+                    let pagewrapperdiv = utility.create("div", classname_pagewrapperdiv);
                     contentdiv.appendChild(pagewrapperdiv);
                     // pagediv
-                    let pagediv = create("div", classname_pagediv);
+                    let pagediv = utility.create("div", classname_pagediv);
                     pagewrapperdiv.appendChild(pagediv);
-                    widthcurcontentdiv += 1;
-                    contentdiv.style.width = (widthinitcontentdiv + widthcurcontentdiv) * 100 + "%";
+                    pagescurcontentdiv += 1;
+                    contentdiv.style.width = (pagesinitcontentdiv + pagescurcontentdiv) * 100 + "%";
                     // left/right-page-div
                     let targetheight = pagediv.clientHeight;
-                    let leftpagediv = create("div", classname_lpagediv);
-                    let rightpagediv = create("div", classname_rpagediv);
+                    let leftpagediv = utility.create("div", classname_lpagediv);
+                    let rightpagediv = utility.create("div", classname_rpagediv);
                     pagediv.appendChild(leftpagediv);
                     pagediv.appendChild(rightpagediv);
                     // insert
@@ -438,23 +504,34 @@
                     indexpara = insertpara2lrpage(paralist, indexpara, rightpagediv, targetheight);
 
                     // 显示当前页的 div
-                    let curpagediv = create("div", classname_curpagediv);
-                    curpagediv.innerText = widthcurcontentdiv;
+                    let curpagediv = utility.create("div", classname_curpagediv);
+                    curpagediv.innerText = pagescurcontentdiv;
 
                     pagewrapperdiv.appendChild(curpagediv);
                 }
             },
             // 加载数据 - 显示每一页 - 注册监听器...
             run() {
-                let data = "Speaking quietly so that no one else would hear, Harry told the other two about Snape's sudden, sinister desire to be a Quidditch referee.\n\"Don't play,\" said Hermione at once.\n\"Say you're ill,\" said Ron.\n\"Pretend to break your leg,\" Hermione suggested.\n\"Really break your leg,\" said Ron.\n\"I can't,\" said Harry. \"There isn't a reserve Seeker. If I back out, Gryffindor can't play at all.\"\nAt that moment Neville toppled into the common room. How he had managed to climb through the portrait hole was anyone's guess, because his legs had been stuck together with what they recognized at once as the Leg-Locker Curse. He must have had to bunny hop all the way up to Gryffindor tower.\nEveryone fell over laughing except Hermione, who leapt up and performed the countercurse. Neville's legs sprang apart and he got to his feet, trembling. \"What happened?\" Hermione asked him, leading him over to sit with Harry and Ron.\n\"Malfoy,\" said Neville shakily. \"I met him outside the library. He said he'd been looking for someone to practice that on.\"\n\"Go to Professor McGonagall!\" Hermione urged Neville. \"Report him!\"\nNeville shook his head.\n\"I don't want more trouble,\" he mumbled.\n\"You've got to stand up to him, Neville!\" said Ron. \"He's used to walking all over people, but that's no reason to lie down in front of him and make it easier.\"\n\"There's no need to tell me I'm not brave enough to be in Gryffindor, Malfoy's already done that,\" Neville choked out.\nHarry felt in the pocket of his robes and pulled out a Chocolate Frog, the very last one from the box Hermione had given him for Christmas. He gave it to Neville, who looked as though he might cry.\n\"You're worth twelve of Malfoy,\" Harry said. \"The Sorting Hat chose you for Gryffindor, didn't it? And where's Malfoy? In stinking Slytherin.\"\nNeville's lips twitched in a weak smile as he unwrapped the frog.\n\"Thanks, Harry... I think I'll go to bed.... D'you want the card, you collect them, don't you?\"\nAs Neville walked away, Harry looked at the Famous Wizard card.\n\"Dumbledore again,\" he said, \"He was the first one I ever-\"\nHe gasped. He stared at the back of the card. Then he looked up at Ron and Hermione.\n\"I've found him!\" he whispered. \"I've found Flamel! I told you I'd read the name somewhere before, I read it on the train coming here -- listen to this: 'Dumbledore is particularly famous for his defeat of the dark wizard Grindelwald in 1945, for the discovery of the twelve uses of dragon's blood, and his work on alchemy with his partner, Nicolas Flamel'!\"\nHermione jumped to her feet. She hadn't looked so excited since they'd gotten back the marks for their very first piece of homework.\n\"Stay there!\" she said, and she sprinted up the stairs to the girls' dormitories. Harry and Ron barely had time to exchange mystified looks before she was dashing back, an enormous old book in her arms.\n\"I never thought to look in here!\" she whispered excitedly. \"I got this out of the library weeks ago for a bit of light reading.\"\n\"Light?\" said Ron, but Hermione told him to be quiet until she'd looked something up, and started flicking frantically through the pages, muttering to herself.\nAt last she found what she was looking for.\n\"I knew it! I knew it!\"\n\"Are we allowed to speak yet?\" said Ron grumpily. Hermione ignored him.\n\"Nicolas Flamel,\" she whispered dramatically, \"is the only known maker of the Sorcerer's Stone!\"\nThis didn't have quite the effect she'd expected.\n\"The what?\" said Harry and Ron.\n\"Oh, honestly, don't you two read? Look -- read that, there.\"\nShe pushed the book toward them, and Harry and Ron read: The ancient study of alchemy is concerned with making the Sorcerer's Stone, a legendary substance with astonishing powers. The stone will transform any metal into pure gold. It also produces the Elixir of Life, which will make the drinker immortal.\nThere have been many reports of the Sorcerer's Stone over the centuries, but the only Stone currently in existence belongs to Mr. Nicolas Flamel, the noted alchemist and opera lover. Mr. Flamel, who celebrated his six hundred and sixty-fifth birthday last year, enjoys a quiet life in Devon with his wife, Perenelle (six hundred and fifty-eight).\n\"See?\" said Hermione, when Harry and Ron had finished. \"The dog must be guarding Flamel's Sorcerer's Stone! I bet he asked Dumbledore to keep it safe for him, because they're friends and he knew someone was after it, that's why he wanted the Stone moved out of Gringotts!\"\n\"A stone that makes gold and stops you from ever dying!\" said Harry. \"No wonder Snape's after it! Anyone would want it.\"\n\"And no wonder we couldn't find Flamel in that Study of Recent Developments in Wizardry,\" said Ron. \"He's not exactly recent if he's six hundred and sixty-five, is he?\"\nThe next morning in Defense Against the Dark Arts, while copying down different ways of treating werewolf bites, Harry and Ron were still discussing what they'd do with a Sorcerer's Stone if they had one. It wasn't until Ron said he'd buy his own Quidditch team that Harry remembered about Snape and the coming match.\n\"I'm going to play,\" he told Ron and Hermione. \"If I don't, all the Slytherins will think I'm just too scared to face Snape. I'll show them... it'll really wipe the smiles off their faces if we win.\"\n\"Just as long as we're not wiping you off the field,\" said Hermione.\nAs the match drew nearer, however, Harry became more and more nervous, whatever he told Ron and Hermione. The rest of the team wasn't too calm, either. The idea of overtaking Slytherin in the house championship was wonderful, no one had done it for seven years, but would they be allowed to, with such a biased referee?\nHarry didn't know whether he was imagining it or not, but he seemed to keep running into Snape wherever he went. At times, he even wondered whether Snape was following him, trying to catch him on his own. Potions lessons were turning into a sort of weekly torture, Snape was so horrible to Harry. Could Snape possibly know they'd found out about the Sorcerer's Stone? Harry didn't see how he could -- yet he sometimes had the horrible feeling that Snape could read minds.\nHarry knew, when they wished him good luck outside the locker rooms the next afternoon, that Ron and Hermione were wondering whether they'd ever see him alive again. This wasn't what you'd call comforting. Harry hardly heard a word of Wood's pep talk as he pulled on his Quidditch robes and picked up his Nimbus Two Thousand.\nRon and Hermione, meanwhile, had found a place in the stands next to Neville, who couldn't understand why they looked so grim and worried, or why they had both brought their wands to the match. Little did Harry know that Ron and Hermione had been secretly practicing the Leg-Locker Curse. They'd gotten the idea from Malfoy using it on Neville, and were ready to use it on Snape if he showed any sign of wanting to hurt Harry.\n\"Now, don't forget, it's Locomotor Mortis,\" Hermione muttered as Ron slipped his wand up his sleeve.\n\"I know,\" Ron snapped. \"Don't nag.\"\nBack in the locker room, Wood had taken Harry aside.\n\"Don't want to pressure you, Potter, but if we ever need an early capture of the Snitch it's now. Finish the game before Snape can favor Hufflepuff too much.\"\n\"The whole school's out there!\" said Fred Weasley, peering out of the door. \"Even -- blimey -- Dumbledore's come to watch!\"\nHarry's heart did a somersault.\n\"Dumbledore?\" he said, dashing to the door to make sure. Fred was right. There was no mistaking that silver beard.\nHarry could have laughed out loud with relief He was safe. There was simply no way that Snape would dare to try to hurt him if Dumbledore was watching.\nPerhaps that was why Snape was looking so angry as the teams marched onto the field, something that Ron noticed, too.\n\"I've never seen Snape look so mean,\" he told Hermione. \"Look -they're off Ouch!\"\nSomeone had poked Ron in the back of the head. It was Malfoy.\n\"Oh, sorry, Weasley, didn't see you there.\"\nMalfoy grinned broadly at Crabbe and Goyle.\n\"Wonder how long Potter's going to stay on his broom this time? Anyone want a bet? What about you, Weasley?\"\nRon didn't answer; Snape had just awarded Hufflepuff a penalty because George Weasley had hit a Bludger at him. Hermione, who had all her fingers crossed in her lap, was squinting fixedly at Harry, who was circling the game like a hawk, looking for the Snitch.\n\"You know how I think they choose people for the Gryffindor team?\" said Malfoy loudly a few minutes later, as Snape awarded Hufflepuff another penalty for no reason at all. \"It's people they feel sorry for. See, there's Potter, who's got no parents, then there's the Weasleys, who've got no money -- you should be on the team, Longbottom, you've got no brains.\"\nNeville went bright red but turned in his seat to face Malfoy.\n\"I'm worth twelve of you, Malfoy,\" he stammered.\nMalfoy, Crabbe, and Goyle howled with laughter, but Ron, still not daring to take his eyes from the game, said, \"You tell him, Neville.\"\n\"Longbottom, if brains were gold you'd be poorer than Weasley, and that's saying something.\"\nRon's nerves were already stretched to the breaking point with anxiety about Harry.\n\"I'm warning you, Malfoy -- one more word\n\"Ron!\" said Hermione suddenly, \"Harry --\"\n\"What? Where?\"";
                 let onsuccess = (data) => {
-                    this.createPages(this.wrapLines(data));
-                    // this.init();
+                    utility.byid("loadingdiv").style.visibility = "hidden";
+                    let preprocess = (chapter, index, title) => {
+                        let lines = chapter["lines"];
+                        let chaptitleline = utility.wrapTitle(utility.wrapLine(chapter["title"]), utility.typeWrapper.chtitle, index);
+                        let reslines = [chaptitleline].concat(utility.wrapLines(lines));
+                        if (index == 0)
+                            reslines = [utility.wrapTitle(utility.wrapLine(title), utility.typeWrapper.htitle)].concat(reslines);
+                        return reslines;
+                    };
+                    for (let i = 0; i < data["chapterCount"]; i++)
+                        app.appendPages(preprocess(data["chapters"][i], i, data["title"]));
                     pageTurner.registerEvent();
                     wordTranslateTool.registerEvent();
                     sentenceTool.registerEvent();
                 };
-                data = dataLoader.loadArticle(onsuccess);
+                let onfailed = () => {
+                    utility.byid("loadingdiv").innerText = "failed to load file";
+                };
+                dataLoader.loadArticle(onsuccess, onfailed);
             }
         };
         // 测试函数
@@ -463,15 +540,15 @@
             testElementHeight: function () {
                 let div = document.createElement("div");
                 div.className = classname_pagediv;
-                byid("contentdiv").appendChild(div);
+                utility.byid("contentdiv").appendChild(div);
                 let tmpp = document.createElement("p");
                 tmpp.innerText = "11111111111111111111111111111111111111";
                 div.appendChild(tmpp);
                 console.log("body-height: " + document.body.clientHeight);
                 console.log("div-height: " + div.clientHeight);
-                console.log("pagediv-height: " + byclass("pagediv", 0).clientHeight);
-                console.log("leftpagediv-height: " + byclass(classname_lpagediv, 0).clientHeight);
-                console.log("leftpagediv-padding: " + byclass(classname_lpagediv, 0).style.padding);
+                console.log("pagediv-height: " + utility.byclass("pagediv", 0).clientHeight);
+                console.log("leftpagediv-height: " + utility.byclass(classname_lpagediv, 0).clientHeight);
+                console.log("leftpagediv-padding: " + utility.byclass(classname_lpagediv, 0).style.padding);
 
             },
             testWheelEvent: function () {
@@ -494,7 +571,7 @@
             },
             testWrapLines: function () {
                 let data = "On a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开";
-                document.body.innerHTML = "wraplines: " + app.wrapLines(data);
+                document.body.innerHTML = "wraplines: " + utility.wrapLines(data);
             },
             testDisplayToolbox: function () {
                 wordTranslateTool.registerEvent();
@@ -508,16 +585,16 @@
                 window.addEventListener("click", (event) => {
                     console.log("capture: true");
                 }, { capture: true });
-                byid("bubbleTestButton").addEventListener("click", (event) => {
+                utility.byid("bubbleTestButton").addEventListener("click", (event) => {
                     console.log("button, capture: false");
                 }, { capture: false });
-                byid("bubbleTestButton").addEventListener("click", (event) => {
+                utility.byid("bubbleTestButton").addEventListener("click", (event) => {
                     console.log("button, capture: true");
                 }, { capture: true });
             },
             // 测试页码控件
             testCurPageDiv: function () {
-                let contentdiv = byid("contentdiv");
+                let contentdiv = utility.byid("contentdiv");
                 contentdiv.style.width = "200%";
                 pageTurner.registerEvent();
                 wordTranslateTool.registerEvent();
@@ -525,12 +602,33 @@
             // 测试左右两栏页面的更好的显示方式
             testSentenceBox: function () {
                 let data = "On a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up     through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\n";
-                app.createPages(app.wrapLines(data));
+                app.appendPages(utility.wrapLines(data));
                 wordTranslateTool.registerEvent();
                 sentenceTool.registerEvent();
             },
+            testChapterLoad: function () {
+                let onsuccess = (data) => {
+                    utility.byid("loadingdiv").style.visibility = "hidden";
+                    for (let i = 0; i < data["chapterCount"]; i++) {
+                        let chapter = data["chapters"][i];
+                        let lines = chapter["lines"];
+                        let chaptitleline = utility.wrapTitle(utility.wrapLine(chapter["title"]), utility.typeWrapper.chtitle, i);
+                        let reslines = [chaptitleline].concat(utility.wrapLines(lines));
+                        if (i == 0)
+                            reslines = [utility.wrapTitle(utility.wrapLine(data["title"]), utility.typeWrapper.htitle)].concat(reslines);
+                        app.appendPages(reslines);
+                    }
+                    pageTurner.registerEvent();
+                    wordTranslateTool.registerEvent();
+                    sentenceTool.registerEvent();
+                };
+                $.get("tmpp.json", (data, status) => {
+                    if (status == "success") {
+                        onsuccess(data);
+                    }
+                });
+            }
         }
-
         window.onload = () => {
             app.run();
         }
@@ -575,6 +673,7 @@
             </div>
         </div>
     </div>
+    <div id="loadingdiv">loading...</div>
     <div id="contentdiv" page-current="0">
     </div>
 </body>

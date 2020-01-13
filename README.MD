@@ -56,3 +56,25 @@
 - 鼠标点击翻译盒子触发翻页
   > 原因: 鼠标点击翻页的监听器设置到了 window 上  
   > 解决: 设置到 contentdiv 上即可
+- 渐显动画在仅更改`visibility`的时候不起作用，更改`display`时起作用
+  > 原因: CSS动画默认仅在第一次加载时启动，和`display=none -> display=block`类似  
+  > 解决: 使用如下JavaScript代码手动触发，即手动添加/移除动画属性，动画见下
+  ```javascript
+  show(){
+      box.style.visibility = "visible";
+      box.style.animation = "boxanimation_show 0.2s";
+      box.style.opacity = "1"; 
+  }
+  hide(){
+      box.style.visibility = "hidden";
+      box.style.animation = "none";
+      box.style.opacity = "0";
+  }
+  ```
+  ```css
+  @keyframes boxanimation_show {
+      0% { opacity: 0; }
+      30% { opacity: 0.75; }
+      100% { opacity: 1; }
+  }
+  ```
