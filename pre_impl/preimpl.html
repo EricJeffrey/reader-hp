@@ -450,6 +450,7 @@
                 }).fail(onfailed);
             },
         };
+        // 程序入口
         var app = {
             // 读取阅读进度
             init: function () {
@@ -500,8 +501,19 @@
                         }
                         return indexpara;
                     };
-                    indexpara = insertpara2lrpage(paralist, indexpara, leftpagediv, targetheight);
-                    indexpara = insertpara2lrpage(paralist, indexpara, rightpagediv, targetheight);
+                    let tmpindex = insertpara2lrpage(paralist, indexpara, leftpagediv, targetheight);
+                    // FIXME 无法添加更多元素
+                    if (tmpindex == indexpara) {
+                        console.log("error! tmpindex: " + tmpindex);
+                        break;
+                    }
+                    indexpara = tmpindex;
+                    tmpindex = insertpara2lrpage(paralist, indexpara, rightpagediv, targetheight);
+                    if (tmpindex == indexpara) {
+                        console.log("error! tmpindex: " + tmpindex);
+                        break;
+                    }
+                    indexpara = tmpindex;
 
                     // 显示当前页的 div
                     let curpagediv = utility.create("div", classname_curpagediv);
@@ -514,6 +526,7 @@
             run() {
                 let onsuccess = (data) => {
                     utility.byid("loadingdiv").style.visibility = "hidden";
+                    // 更改书名，章节标题样式
                     let preprocess = (chapter, index, title) => {
                         let lines = chapter["lines"];
                         let chaptitleline = utility.wrapTitle(utility.wrapLine(chapter["title"]), utility.typeWrapper.chtitle, index);
@@ -522,8 +535,10 @@
                             reslines = [utility.wrapTitle(utility.wrapLine(title), utility.typeWrapper.htitle)].concat(reslines);
                         return reslines;
                     };
-                    for (let i = 0; i < data["chapterCount"]; i++)
+                    for (let i = 0; i < Math.min(data["chapterCount"], 10); i++) {
+                        console.log("CHAPTER: " + num2engword[i]);
                         app.appendPages(preprocess(data["chapters"][i], i, data["title"]));
+                    }
                     pageTurner.registerEvent();
                     wordTranslateTool.registerEvent();
                     sentenceTool.registerEvent();
@@ -534,7 +549,7 @@
                 dataLoader.loadArticle(onsuccess, onfailed);
             }
         };
-        // 测试函数
+        // 测试各种功能函数
         var tester = {
             // 测试指定className之后元素是否具有高度 -> 将元素加入到dom之后才会开始计算高度
             testElementHeight: function () {
@@ -629,6 +644,7 @@
                 });
             }
         }
+
         window.onload = () => {
             app.run();
         }

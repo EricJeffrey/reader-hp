@@ -6,5 +6,6 @@
     },
     "todo-tree.filtering.excludeGlobs": [
         "**/*.MD"
-    ]
+    ],
+    "python.pythonPath": "D:\\Python3\\python.exe"
 }
