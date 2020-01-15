@@ -354,7 +354,6 @@
                 this.hideSenetenceBox();
             }
         };
-        // todo 分章节加载，前后端接口，字典后端
         var dataLoader = {
             loadArticle: function (onsuccess, onfailed) {
                 $.get("tmpp.json", (data, status) => {
@@ -444,6 +443,8 @@
             // 加载数据 - 显示每一页 - 注册监听器...
             run() {
                 let onsuccess = (data) => {
+                    if (typeof (data) == "string")
+                        data = JSON.parse(data);
                     app.data = data;
                     let chapterCount = data["chapterCount"];
                     let timeoutval = 150;

@@ -3,14 +3,678 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" /> -->
-    <title>HPReader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>PreImplementation</title>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/toolbox.css">
+    <link rel="stylesheet" href="css/sentencebox.css">
     <script>
+        let classname_pagediv = "pagediv";
+        let classname_lpagediv = "leftpagediv";
+        let classname_rpagediv = "rightpagediv";
+        let classname_curpagediv = "curpagediv";
+        let classname_pagewrapperdiv = "pagewrapperdiv";
+        let classname_para = "para";
+        let classname_word = "word";
+        let attrPageCurContDiv = "page-current";
+        let num2engword = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE",
+            "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY", "TWENTY-ONE", "TWENTY-TWO",
+            "TWENTY-THREE", "TWENTY-FOUR", "TWENTY-FIVE", "TWENTY-SIX", "TWENTY-SEVEN", "TWENTY-EIGHT", "TWENTY-NINE", "THIRTY",
+            "THIRTY-ONE", "THIRTY-TWO", "THIRTY-THREE", "THIRTY-FOUR", "THIRTY-FIVE", "THIRTY-SIX", "THIRTY-SEVEN", "THIRTY-EIGHT",
+            "THIRTY-NINE", "FORTY", "FORTY-ONE", "FORTY-TWO", "FORTY-THREE", "FORTY-FOUR", "FORTY-FIVE", "FORTY-SIX", "FORTY-SEVEN",
+            "FORTY-EIGHT", "FORTY-NINE", "FIFTY", "FIFTY-ONE", "FIFTY-TWO", "FIFTY-THREE", "FIFTY-FOUR", "FIFTY-FIVE", "FIFTY-SIX",
+            "FIFTY-SEVEN", "FIFTY-EIGHT", "FIFTY-NINE", "SIXTY", "SIXTY-ONE", "SIXTY-TWO", "SIXTY-THREE", "SIXTY-FOUR", "SIXTY-FIVE",
+            "SIXTY-SIX", "SIXTY-SEVEN", "SIXTY-EIGHT", "SIXTY-NINE", "SEVENTY", "SEVENTY-ONE", "SEVENTY-TWO", "SEVENTY-THREE",
+            "SEVENTY-FOUR", "SEVENTY-FIVE", "SEVENTY-SIX", "SEVENTY-SEVEN", "SEVENTY-EIGHT", "SEVENTY-NINE", "EIGHTY", "EIGHTY-ONE",
+            "EIGHTY-TWO", "EIGHTY-THREE", "EIGHTY-FOUR", "EIGHTY-FIVE", "EIGHTY-SIX", "EIGHTY-SEVEN", "EIGHTY-EIGHT", "EIGHTY-NINE",
+            "NINETY", "NINETY-ONE", "NINETY-TWO", "NINETY-THREE", "NINETY-FOUR", "NINETY-FIVE", "NINETY-SIX", "NINETY-SEVEN", "NINETY-EIGHT",
+            "NINETY-NINE", "HUNDRED"];
+
+        // todo 分章节加载，前后端接口，字典后端
+        var dataLoader = {
+            loadArticle: function (onsuccess, onfailed) {
+                $.get("resources/HP3-EN.json", (data, status) => {
+                    console.log(status);
+                    if (status == "success") onsuccess(data);
+                    else onfailed(data, status);
+                }).fail(onfailed);
+            },
+            // todo 确定前后端接口 
+            loadWordTrans: function (word, onsuccess, onfailed) {
+                setTimeout(() => {
+                    let res = {
+                        "word": "about",
+                        "phonetic": "ә'baut",
+                        "translation": "\"prep. 在...周围，大约 有关 关于\nadv. 大约 四处 在附近 周围\""
+                    };
+                    let status = "fail";
+                    if (Math.random() > 0.5) onsuccess(res);
+                    else onfailed(status);
+                }, 20);
+            }
+        };
+
+        // 各种工具
+        var utility = {
+            typeWrapper: {
+                htitle: "htitle",
+                chtitle: "chtitle"
+            },
+            byid: function byid(id) {
+                return document.getElementById(id);
+            },
+            byclass: function byclass(classname, index) {
+                return document.getElementsByClassName(classname)[index];
+            },
+            create: function create(tagname, classname) {
+                let tmp = document.createElement(tagname);
+                tmp.className = classname;
+                return tmp;
+            },
+            // 去掉字符串后的 px 并转换为数值
+            pxstr2number: function pxstr2number(pxstr) {
+                if (pxstr == null) return null;
+                return Number(pxstr.substring(0, pxstr.length - 2));
+            },
+            // 当前 页 * window.width
+            currentPageOffset: function currentPageOffset() {
+                return Number(utility.byid("contentdiv").getAttribute(attrPageCurContDiv)) * window.innerWidth;
+            },
+            // 将 title 加上对应的标签 <htitle> 或者 <chtitle>
+            wrapTitle: function (title, type, chapter_index) {
+                let ret = "";
+                switch (type) {
+                    case this.typeWrapper.htitle:
+                        ret = "<htitle>" + title + "</htitle>";
+                        break;
+                    case this.typeWrapper.chtitle:
+                        ret = "<chtitle>CHAPTER " + num2engword[chapter_index] + " - " + title + "</chtitle>";
+                        break;
+                    default:
+                        break;
+                }
+                return ret;
+            },
+            // 将 line 中由空格隔开的串加上 <span class="word"> 标签
+            wrapLine: function (line) {
+                let wordlist = line.split(' ');
+                var tmpresline = "";
+                wordlist.forEach(word => {
+                    let lenword = word.length;
+                    if (lenword != 0 && word.match("[a-zA-Z]") != null) {
+                        // 去掉前后的符号
+                        let revword = "";
+                        for (let i = 0; i < lenword; i++)
+                            revword += word[lenword - i - 1];
+                        let startpos = word.match("[a-zA-Z]").index;
+                        // 从后往前数第一次出现字母的位置
+                        let endpos = revword.match("[a-zA-Z]").index;
+                        endpos = lenword - endpos;
+                        if (startpos != 0) tmpresline += word.substring(0, startpos);
+                        tmpresline += "<span class=\"word\">" + word.substring(startpos, endpos) + "</span>";
+                        if (endpos < lenword) tmpresline += word.substring(endpos, lenword);
+                    } else {
+                        tmpresline += word;
+                    }
+                    tmpresline += " ";
+                });
+                return tmpresline;
+            },
+            // 将 lines 中的每一行都加上 span  标签
+            wrapLines: function (lines) {
+                let reslines = [];
+                lines.forEach(line => {
+                    reslines.push(this.wrapLine(line));
+                });
+                return reslines;
+            }
+        };
+
+        // 存储 - 记录阅读进度
+        var storage = {
+            StrKeyCurrentPage: "page-current",
+            readCurrentPage: function () {
+                let tmp = window.localStorage.getItem(this.StrKeyCurrentPage);
+                if (tmp == null) return 0;
+                return Number(tmp);
+            },
+            setCurrentPage: function (currentpage) {
+                window.localStorage.setItem(this.StrKeyCurrentPage, currentpage);
+            }
+        };
+
+        // 翻页
+        var pageTurner = {
+            validClickWidth: 150,
+            registerEvent() {
+                window.addEventListener("keydown", (event) => {
+                    if (event.code == "PageUp" || event.code == "ArrowLeft") {
+                        event.preventDefault();
+                        this.prevPage();
+                    }
+                    if (event.code == "PageDown" || event.code == "ArrowRight") {
+                        event.preventDefault();
+                        this.nextPage();
+                    }
+                });
+                window.addEventListener("keypress", (event) => {
+                    if (event.code == "Space" && event.shiftKey) this.prevPage();
+                    if (event.code == "Space" && !event.shiftKey) this.nextPage();
+                });
+                let contentdiv = utility.byid("contentdiv");
+                contentdiv.addEventListener("click", (event) => {
+                    if (event.clientX <= this.validClickWidth) this.prevPage();
+                    if (event.clientX >= document.body.clientWidth - this.validClickWidth) this.nextPage();
+                });
+                window.addEventListener("wheel", (event) => {
+                    if (event.deltaY > 0) this.nextPage();
+                    if (event.deltaY < 0) this.prevPage();
+                });
+            },
+            prevPage() {
+                let contentdiv = utility.byid("contentdiv");
+                let currentPage = Number(contentdiv.getAttribute(attrPageCurContDiv));
+                if (currentPage > 0) {
+                    contentdiv.setAttribute(attrPageCurContDiv, currentPage - 1);
+                    window.scroll({ top: 0, left: contentdiv.children[currentPage - 1].offsetLeft, behavior: "smooth" });
+                    storage.setCurrentPage((currentPage - 1));
+                }
+            },
+            nextPage() {
+                let contentdiv = utility.byid("contentdiv");
+                let currentPage = Number(contentdiv.getAttribute(attrPageCurContDiv));
+                if (currentPage < contentdiv.childElementCount - 1) {
+                    contentdiv.setAttribute(attrPageCurContDiv, currentPage + 1);
+                    window.scroll({ top: 0, left: contentdiv.children[currentPage + 1].offsetLeft, behavior: "smooth" });
+                    document.cookie = "currentpage=" + (currentPage + 1);
+                    storage.setCurrentPage((currentPage + 1));
+                }
+            },
+            updateCurPage() { }
+        };
+
+        // 单词翻译
+        var wordTranslateTool = {
+            // word-mouseover: 移动到单词 -> 未显示? -> 设置超时 -> 超时显示
+            // word-mousemove: 捕获阶段，结束分发
+            // window-mouseover: 已经显示 -> 鼠标不在 box 和 target 上? -> 隐藏
+            //                   未显示 -> 清除已经设置的timeout
+            hoverStatus: {
+                target: null,
+                pendingTimoutId: null,
+                WaitTimeInMM: 600,
+                clearPending: function () {
+                    if (this.pendingTimoutId != null)
+                        clearTimeout(this.pendingTimoutId);
+                    this.pendingTimoutId = null;
+                    this.target = null;
+                },
+                setPending: function (target, pendingId) {
+                    this.target = target;
+                    this.pendingTimoutId = pendingId;
+                }
+            },
+            boxStatus: {
+                showing: false,
+                wordSpanTarget: null,
+                box: null
+            },
+            showWordBox: function (wordspan) {
+                let wordBox = utility.byid("wordbox");
+                wordBox.style.top = wordBox.style.bottom = null;
+                wordBox.style.left = wordBox.style.right = null;
+                // 页面横向滚动，offsetLeft 大于 1920， 需要先减去
+                let pageOffset = utility.currentPageOffset();
+                let wordOffsetLeft = wordspan.offsetLeft - pageOffset;
+                wordBox.style.bottom = (window.innerHeight - wordspan.offsetTop) + "px";
+                wordBox.style.left = (pageOffset + wordOffsetLeft) + "px";
+                // 调整box位置，默认 上方向右，必要时调整为 下方向左
+                let stylebox = getComputedStyle(wordBox);
+                // wordspan 太高
+                if (wordspan.offsetTop <= utility.pxstr2number(stylebox.height)) {
+                    wordBox.style.bottom = null;
+                    wordBox.style.top = (wordspan.offsetTop + wordspan.offsetHeight) + "px";
+                }
+                stylebox = getComputedStyle(wordBox);
+                // wordspan 太靠右
+                if (window.innerWidth - wordOffsetLeft <= utility.pxstr2number(stylebox.width)) {
+                    wordBox.style.left = (pageOffset + wordOffsetLeft + wordspan.offsetWidth - utility.pxstr2number(stylebox.width)) + "px";
+                    // wordBox.style.right = (pageOffset + wordOffsetLeft + wordspan.offsetWidth) + "px"; 
+                }
+                wordBox.style.visibility = "visible";
+                wordBox.style.animation = "boxanimation_show 0.2s";
+                wordBox.style.opacity = "1";
+                this.boxStatus.showing = true;
+                this.boxStatus.wordSpanTarget = wordspan;
+                this.boxStatus.box = wordBox;
+            },
+            hideWordBox: function () {
+                let wordBox = utility.byid("wordbox");
+                wordBox.style.opacity = "0";
+                wordBox.style.animation = "none";
+                wordBox.style.visibility = "hidden";
+                this.boxStatus.showing = false;
+                this.boxStatus.wordSpanTarget = null;
+            },
+            registerEvent: function () {
+                let wordlist = document.getElementsByClassName(classname_word);
+                for (let i = 0; i < wordlist.length; i++) {
+                    const word = wordlist[i];
+                    let _this = this;
+                    word.addEventListener("mouseover", (event) => {
+                        // 已经显示 box 的话，由 window 处理; 已经开始选择文本，屏蔽wordbox
+                        if (this.boxStatus.showing || sentenceTool.selectStatus.selecting)
+                            return;
+                        // 正在等待显示，删除超时函数
+                        this.hoverStatus.clearPending();
+                        let timeoutFunc = function () {
+                            // 鼠标移动到其它地方
+                            if (_this.hoverStatus.target != event.target)
+                                return;
+                            // 加载翻译
+                            dataLoader.loadWordTrans(
+                                _this.hoverStatus.target.innerText,
+                                function onsuccess(wordtrans) {
+                                    // todo 翻译格式化
+                                    utility.byid("tranbox").innerText = JSON.stringify(wordtrans);
+                                    _this.showWordBox(word);
+                                },
+                                function onfailed() {
+                                    utility.byid("tranbox").innerText = "failed to get translation";
+                                    _this.showWordBox(word);
+                                }
+                            );
+                        };
+                        this.hoverStatus.setPending(word, setTimeout(timeoutFunc, this.hoverStatus.WaitTimeInMM, event));
+                    });
+                    word.addEventListener("mousemove", (event) => {
+                        event.stopPropagation();
+                    }, { capture: true });
+                }
+                window.addEventListener("mousemove", (event) => {
+                    if (this.boxStatus.showing) {
+                        // 翻译盒子在显示
+                        let inWordBox = (event, box) => {
+                            let ex = event.clientX, ey = event.clientY;
+                            let left = box.offsetLeft - utility.currentPageOffset(), top = box.offsetTop;
+                            let width = box.clientWidth, height = box.clientHeight;
+                            if (width == 0)
+                                width = box.offsetWidth, height = box.offsetHeight;
+                            return ex >= left && ex <= left + width && ey >= top && ey <= top + height;
+                        }
+                        // 鼠标移动到其它地方了
+                        if (!inWordBox(event, this.boxStatus.box) && !inWordBox(event, this.boxStatus.wordSpanTarget))
+                            this.hideWordBox();
+                    }
+                    else {
+                        this.hoverStatus.clearPending();
+                    }
+                });
+            },
+            copy: function () {
+                console.log("copy word: " + this.boxStatus.wordSpanTarget.innerText);
+                this.hideWordBox();
+            },
+            record: function () {
+                console.log("record word: " + this.boxStatus.wordSpanTarget.innerText);
+                this.hideWordBox();
+            }
+        };
+
+        // 句子记录
+        var sentenceTool = {
+            selectStatus: {
+                selectStart: false,
+                selecting: false,
+                selection: "",
+                setSelectStatus: function (selecting) {
+                    this.selecting = selecting;
+                    if (selecting == false)
+                        this.selectStart = false;
+                }
+            },
+            boxStatus: {
+                showing: false,
+                selection: "",
+                sentencebox: null
+            },
+            showSentenceBox: function (x, y) {
+                let box = utility.byid("sentencebox");
+                let pageOffset = utility.currentPageOffset();
+                box.style.left = (pageOffset + x + 2) + "px";
+                box.style.bottom = (window.innerHeight - y + 15) + "px";
+                box.style.visibility = "visible";
+                box.style.animation = "boxanimation_show 0.2s";
+                box.style.opacity = "1";
+                this.boxStatus.showing = true;
+                this.boxStatus.selection = this.selectStatus.selection;
+                this.boxStatus.showing = true;
+            },
+            hideSenetenceBox: function () {
+                let box = utility.byid("sentencebox");
+                box.style.visibility = "hidden";
+                box.style.animation = "none";
+                box.style.opacity = "0";
+                this.boxStatus.showing = false;
+                this.boxStatus.selection = "";
+                this.boxStatus.sentencebox = null;
+            },
+            registerEvent: function () {
+                let contentdiv = utility.byid("contentdiv");
+                let _this = this;
+                contentdiv.onselectstart = function () {
+                    _this.selectStatus.selectStart = true;
+                };
+                document.onselectionchange = function () {
+                    if (_this.selectStatus.selectStart) {
+                        _this.selectStatus.setSelectStatus(true);
+                        _this.selectStatus.selection = document.getSelection().toString();
+                    }
+                };
+                contentdiv.onmouseup = function (event) {
+                    if (_this.selectStatus.selecting && _this.selectStatus.selection != "") {
+                        _this.showSentenceBox(event.clientX, event.clientY);
+                    }
+                    _this.selectStatus.setSelectStatus(false);
+                };
+                contentdiv.onmousedown = function (event) {
+                    if (_this.boxStatus.showing) {
+                        _this.hideSenetenceBox();
+                    }
+                };
+            },
+            copy: function () {
+                console.log("copy sentence: " + this.boxStatus.selection);
+                this.hideSenetenceBox();
+            },
+            record: function () {
+                console.log("record sentence: " + this.boxStatus.selection);
+                this.hideSenetenceBox();
+            }
+        };
+
+        // 程序入口
+        var app = {
+            data: {},
+            // 读取阅读进度
+            init: function () {
+                let currentpage = storage.readCurrentPage();
+                let contentdiv = utility.byid("contentdiv");
+                contentdiv.setAttribute(attrPageCurContDiv, currentpage);
+                window.scroll({ top: 0, left: contentdiv.children[currentpage].offsetLeft, behavior: "smooth" });
+            },
+            // 创建多个页，内容为data，data的每一行表示一个段落，data为span组成的字符串，创建的页会 append 到 contentdiv 中
+            // 由于`width`属性在宽度变化时效果改变，故需要手动处理
+            appendPages: function (data = ["oops, something's wrong"]) {
+                let linelist = data;
+                let paralist = [];
+                // all <p>
+                linelist.forEach(line => {
+                    let para = utility.create("p", classname_para);
+                    para.innerHTML = line;
+                    paralist.push(para);
+                });
+
+                let contentdiv = utility.byid("contentdiv");
+                let pagesinitcontentdiv = contentdiv.clientWidth / window.innerWidth;
+                let pagescurcontentdiv = 0;
+                let indexpara = 0;
+                // insert
+                let insertpara2lrpage = (paralist, indexpara, lrpagediv, targetheight) => {
+                    while (indexpara < paralist.length) {
+                        lrpagediv.appendChild(paralist[indexpara]);
+                        if (lrpagediv.clientHeight > targetheight) {
+                            lrpagediv.removeChild(lrpagediv.lastElementChild);
+                            break;
+                        }
+                        indexpara += 1;
+                    }
+                    return indexpara;
+                };
+                while (indexpara < paralist.length) {
+                    // 最外层 div = page-div + current-page-div
+                    let pagewrapperdiv = utility.create("div", classname_pagewrapperdiv);
+                    contentdiv.appendChild(pagewrapperdiv);
+                    // pagediv
+                    let pagediv = utility.create("div", classname_pagediv);
+                    pagewrapperdiv.appendChild(pagediv);
+                    pagescurcontentdiv += 1;
+                    contentdiv.style.width = (pagesinitcontentdiv + pagescurcontentdiv) * 100 + "%";
+                    // left/right-page-div
+                    let targetheight = pagediv.clientHeight;
+                    let leftpagediv = utility.create("div", classname_lpagediv);
+                    let rightpagediv = utility.create("div", classname_rpagediv);
+                    pagediv.appendChild(leftpagediv);
+                    pagediv.appendChild(rightpagediv);
+                    indexpara = insertpara2lrpage(paralist, indexpara, leftpagediv, targetheight);
+                    if (indexpara < paralist.length)
+                        indexpara = insertpara2lrpage(paralist, indexpara, rightpagediv, targetheight);
+                    // 显示当前页的 div
+                    let curpagediv = utility.create("div", classname_curpagediv);
+                    curpagediv.innerText = (pagesinitcontentdiv + pagescurcontentdiv);
+                    pagewrapperdiv.appendChild(curpagediv);
+                }
+            },
+            // 更改书名，章节标题样式
+            preprocess: function (chapter, chapterindex, title) {
+                let lines = chapter["lines"];
+                let chaptitleline = utility.wrapTitle(utility.wrapLine(chapter["title"]), utility.typeWrapper.chtitle, chapterindex);
+                let reslines = [chaptitleline].concat(utility.wrapLines(lines));
+                if (chapterindex == 0)
+                    reslines = [utility.wrapTitle(utility.wrapLine(title), utility.typeWrapper.htitle)].concat(reslines);
+                return reslines;
+            },
+            // 添加一个章节内容
+            appendChapter: function (chapterindex) {
+                if (chapterindex < app.data["chapterCount"]) {
+                    app.appendPages(app.preprocess(app.data["chapters"][chapterindex], chapterindex, app.data["title"]));
+                }
+            },
+            // 加载数据 - 显示每一页 - 注册监听器...
+            run() {
+                let onsuccess = (data) => {
+                    if (typeof (data) == "string")
+                        data = JSON.parse(data);
+                    app.data = data;
+                    let chapterCount = data["chapterCount"];
+                    let timeoutval = 150;
+                    let timeoutFunc = function (i) {
+                        return function () {
+                            app.appendChapter(i);
+                            utility.byid("loadingbar").setAttribute("value", (i + 1) / chapterCount * 100);
+                            if (i != chapterCount - 1) return;
+                            pageTurner.registerEvent();
+                            wordTranslateTool.registerEvent();
+                            sentenceTool.registerEvent();
+                            utility.byid("contentdiv").style.visibility = "visible";
+                            utility.byid("loadingdiv").style.visibility = "hidden";
+                        };
+                    };
+                    for (let i = 0; i < chapterCount; i++) {
+                        setTimeout(timeoutFunc(i), i * timeoutval);
+                    }
+                };
+                let onfailed = () => {
+                    utility.byid("loadingdiv").innerText = "failed to load file";
+                };
+                dataLoader.loadArticle(onsuccess, onfailed);
+            }
+        };
+        // 测试各种功能函数
+        var tester = {
+            // 测试指定className之后元素是否具有高度 -> 将元素加入到dom之后才会开始计算高度
+            testElementHeight: function () {
+                let div = document.createElement("div");
+                div.className = classname_pagediv;
+                utility.byid("contentdiv").appendChild(div);
+                let tmpp = document.createElement("p");
+                tmpp.innerText = "11111111111111111111111111111111111111";
+                div.appendChild(tmpp);
+                console.log("body-height: " + document.body.clientHeight);
+                console.log("div-height: " + div.clientHeight);
+                console.log("pagediv-height: " + utility.byclass("pagediv", 0).clientHeight);
+                console.log("leftpagediv-height: " + utility.byclass(classname_lpagediv, 0).clientHeight);
+                console.log("leftpagediv-padding: " + utility.byclass(classname_lpagediv, 0).style.padding);
+
+            },
+            testWheelEvent: function () {
+                window.addEventListener("wheel", (event) => {
+                    console.log(event);
+                });
+            },
+            testClickOnWindowPos: function () {
+                window.addEventListener("click", (event) => {
+                    console.log(event);
+                });
+            },
+            testPageUpDown: function () {
+                window.addEventListener("keypress", (event) => {
+                    console.log(event);
+                });
+                window.addEventListener("keydown", (event) => {
+                    console.log(event);
+                });
+            },
+            testWrapLines: function () {
+                let data = "On a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开";
+                document.body.innerHTML = "wraplines: " + utility.wrapLines(data);
+            },
+            testDisplayToolbox: function () {
+                wordTranslateTool.registerEvent();
+            },
+            // 测试事件 捕获阶段 与 冒泡阶段 触发的监听器
+            // 默认 capture 为 false，事件为冒泡阶段的事件
+            testBubbleEvent: function () {
+                window.addEventListener("click", (event) => {
+                    console.log("capture: false");
+                }, { capture: false });
+                window.addEventListener("click", (event) => {
+                    console.log("capture: true");
+                }, { capture: true });
+                utility.byid("bubbleTestButton").addEventListener("click", (event) => {
+                    console.log("button, capture: false");
+                }, { capture: false });
+                utility.byid("bubbleTestButton").addEventListener("click", (event) => {
+                    console.log("button, capture: true");
+                }, { capture: true });
+            },
+            // 测试页码控件
+            testCurPageDiv: function () {
+                let contentdiv = utility.byid("contentdiv");
+                contentdiv.style.width = "200%";
+                pageTurner.registerEvent();
+                wordTranslateTool.registerEvent();
+            },
+            // 测试左右两栏页面的更好的显示方式
+            testSentenceBox: function () {
+                let data = "On a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up     through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\nOn a dark desert highway, cool wind in my hair\n在黄昏里的沙漠高速上,凉风掠过我的头发\nWarm smell of colitas, rising up through the air\n燥热的大麻味,从空气中窜起\nUp ahead in the distance, I saw a shimmering light\n不远处的前方,我看见了一抹闪耀的光芒\nMy head grew heavy and my sight grew dim\n我开始脑袋沉沉,目光涣散\nI had to stop for the night\n我必须停车过夜\nThere she stood in the doorway;\n那里,她站在门口\nI heard the mission bell\n我似乎听到教堂钟声\nAnd I was thinking to myself, \"This could be Heaven or this could be Hell\"\n我告诉我自己,这也许是天堂也许是地狱\nThen she lit up a candle and she showed me the way\n然后她点起一支蜡烛,给我领路\nThere were voices down the corridor,\n来自走廊里的声音\nI thought I heard them say...\n我想我听到了他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nPlenty of rooms at the Hotel California\n加州旅馆有很多房间\nAny time of year, you can find it here \"\n\"无论何年月,你都能在这里找到它们\"\nHer mind is Tiffany-twisted, she got the Mercedes benz\n她脑子里充斥着蒂芙尼(名牌饰品),她也得到了梅赛德斯奔驰\nShe got a lot of pretty, pretty boys, that she calls friends\n她有诸多被她称作朋友的花美男\nHow they dance in the courtyard, sweet summer sweat.\n他们在庭院里这样起舞,挥洒这甜蜜夏日的汗水\nSome dance to remember, some dance to forget\n有些人跳舞是为了怀念,有些人是为了忘却\nSo I called up the Captain, \"Please bring me my wine\"\n我叫住一个服务员,\"请给我拿些烈酒\"\nHe said, 'We haven't had that spirit here since 1969'\n他说道,\"从1969年开始这里没有这玩意了\"\nAnd still those voices are calling from far away,\n远处仍传来那些声响\nWake you up in the middle of the night\n半夜里可以把你吵醒\nJust to hear them say...\n只听到他们说...\n\"Welcome to the Hotel California\n\"欢迎来到加州旅馆\"\nSuch a lovely place, Such a lovely face\n如此美妙的地方,如此可爱的脸庞\nThey living it up at the Hotel California\n他们在这样的加州旅馆住下来\nWhat a nice surprise, bring your alibis\"\n多么美丽的惊喜,给你这些借口\nMirrors on the ceiling, The pink champagne on ice\n(望着)天花板上一面面镜子,(看着)加冰的粉色香槟\nAnd she said 'We are all just prisoners here, of our own device'\n这时她说道:\"我们就像是在自己建的监狱里的囚徒\"\nAnd in the master's chambers, They gathered for the feast\n在主厅里,他们聚在一起享用盛宴\nThey stab it with their steely knives,\n他们挥着刀叉(餐具)刺中了它(食物)\nBut they just can't kill the beast\n但是他们无法扼杀心中恶魔\nLast thing I remember, I was running for the door\n我记得最后一件事,我跑向出口门\nI had to find the passage back to the place I was before\n我不得不找到通往我来时的地方的通道\n'Relax,' said the night-man,\" We are programmed to receive.\n\"别紧张\"看门人说道,我们是流程化接待\nYou can checkout any time you like,\n你可以在任何时间退房\nbut you can never leave!\" [2] \n但你(的心)永远无法离开\n";
+                app.appendPages(utility.wrapLines(data));
+                wordTranslateTool.registerEvent();
+                sentenceTool.registerEvent();
+            },
+            testChapterLoad: function () {
+                let onsuccess = (data) => {
+                    utility.byid("loadingdiv").style.visibility = "hidden";
+                    for (let i = 0; i < data["chapterCount"]; i++) {
+                        let chapter = data["chapters"][i];
+                        let lines = chapter["lines"];
+                        let chaptitleline = utility.wrapTitle(utility.wrapLine(chapter["title"]), utility.typeWrapper.chtitle, i);
+                        let reslines = [chaptitleline].concat(utility.wrapLines(lines));
+                        if (i == 0)
+                            reslines = [utility.wrapTitle(utility.wrapLine(data["title"]), utility.typeWrapper.htitle)].concat(reslines);
+                        app.appendPages(reslines);
+                    }
+                    pageTurner.registerEvent();
+                    wordTranslateTool.registerEvent();
+                    sentenceTool.registerEvent();
+                };
+                $.get("tmpp.json", (data, status) => {
+                    if (status == "success") {
+                        onsuccess(data);
+                    }
+                });
+            },
+            // 测试移除child
+            testRemoveChild: function () {
+                let a = document.getElementById("contentdiv");
+                a.removeChild(a.children[0]);
+                a.style.width = (Number(a.clientWidth / window.innerWidth) - 1) * 100 + "%";
+                a.setAttribute(attrPageCurContDiv, Number(a.getAttribute(attrPageCurContDiv) - 1));
+            },
+            testAddChild: function () {
+                let pagewrapper = document.createElement("div");
+                pagewrapper.className = classname_pagewrapperdiv;
+                let pagediv = document.createElement("div");
+                pagediv.className = classname_pagediv;
+                pagediv.innerText = "ooooooooooooooooooooooooooooooooooooooooooo";
+                pagewrapper.appendChild(pagediv);
+                let contentdiv = utility.byid("contentdiv");
+                contentdiv.appendChild(pagewrapper);
+                contentdiv.style.width = ((contentdiv.clientWidth / window.innerWidth) + 1) * 100 + "%";
+            },
+            testHowManyChildren: function () {
+                let contentdiv = utility.byid("contentdiv");
+                for (let i = 0; i < 150; i++) {
+                    let pagewrapper = utility.create("div", classname_pagewrapperdiv);
+                    let pagediv = utility.create("div", classname_pagediv);
+                    pagediv.innerText = "yiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii";
+                    pagewrapper.appendChild(pagediv);
+                    contentdiv.appendChild(pagewrapper);
+                    contentdiv.style.width = (i + 1) * 100 + "%";
+                }
+            },
+        }
+        window.onload = () => {
+            app.run();
+        }
     </script>
 </head>
 
 <body>
-    <h1>Hello</h1>
+    <div id="wordbox">
+        <div id="tranbox">
+            garden<br>
+            英 [ˈɡɑːrdn], 美 [ˈɡɑːdn]<br>
+            n. 花园；菜园<br>
+            vt. 栽培花木<br>
+            vi. 从事园艺；在园中种植<br>
+            n. (Garden)人名；(英、意、巴基)加登<br>
+        </div>
+        <hr>
+        <div id="toolbox">
+            <div id="copybox" onclick="wordTranslateTool.copy()">
+                <div>
+                    <img src="imgs/copy.png" title="复制单词释义">复制
+                </div>
+            </div>
+            <div id="recordbox" onclick="wordTranslateTool.record()">
+                <div>
+                    <img src="imgs/record.png" title="记录单词释义">记录
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="sentencebox">
+        <div id="toolbox">
+            <div id="copybox" onclick="sentenceTool.copy()">
+                <div>
+                    <img src="imgs/copy.png" title="复制所选内容">复制
+                </div>
+            </div>
+            <div id="recordbox" onclick="sentenceTool.record()">
+                <div>
+                    <img src="imgs/record.png" title="记录所选内容">记录
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loadingdiv">loading...<br>
+        <progress id="loadingbar" value="0" max="100"></progress>
+    </div>
+    <div id="contentdiv" page-current="0">
+    </div>
 </body>
 
 </html>

@@ -1,0 +1,66 @@
+@keyframes boxanimation_show {
+    0% {
+        opacity: 0;
+    }
+    30% {
+        opacity: 0.75;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+#wordbox {
+    animation: boxanimation_show 0.25s;
+    background-color: whitesmoke;
+    display: block;
+    visibility: hidden;
+    font-size: 12pt;
+    box-shadow: 0px 1px 16px 2px gray;
+    width: 12%;
+    padding: 1px;
+    position: absolute;
+    z-index: 2;
+    cursor: default;
+    border-radius: 3px;
+    word-break: break-all;
+}
+
+#wordbox hr {
+    border-color: rgba(82, 82, 82, 0.3);
+    border-width: 0.5px;
+    border-style: solid;
+    margin: 5px 5px 0px 5px;
+}
+
+#tranbox {
+    margin: 5px;
+    cursor: text;
+}
+
+#toolbox {
+    margin: 0px;
+    display: flex;
+}
+
+#copybox, #recordbox {
+    float: left;
+    margin: auto;
+    width: 50%;
+    padding: 6px;
+}
+
+#copybox:hover, #recordbox:hover {
+    background-color: rgb(212, 212, 212);
+}
+
+#copybox div, #recordbox div {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+}
+
+#toolbox img {
+    height: 16px;
+    margin-right: 5px;
+}
