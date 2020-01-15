@@ -14,11 +14,12 @@
     animation: boxanimation_show 0.15s;
     width: 8%;
     position: absolute;
-    background-color: whitesmoke;
+    background-color: white;
     display: block;
     visibility: hidden;
     font-size: 12pt;
-    box-shadow: 0px 1px 8px 2px gray;
+    box-shadow: 0px 1px 16px 2px gray;
     cursor: default;
     z-index: 1;
+    border-radius: 3px;
 }

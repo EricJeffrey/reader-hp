@@ -7,93 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>PreImplementation</title>
     <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
-    <style>
-        html {
-            height: 100%;
-            width: 100%;
-        }
-
-        body {
-            background-color: whitesmoke;
-            font-size: 18pt;
-            font-family: 'Times New Roman', '等线', Times, serif;
-            width: 100%;
-            height: 100%;
-            padding: 0px;
-            margin: 0px;
-            overflow-y: hidden;
-        }
-
-        body::-webkit-scrollbar {
-            display: none;
-        }
-
-        htitle {
-            font-family: "Harry P";
-            font-weight: bold;
-            font-size: 2.5em;
-        }
-
-        chtitle {
-            font-size: 1.5em;
-            font-family: "Harry P";
-            font-weight: bold;
-        }
-
-        #contentdiv {
-            display: flex;
-            width: 0%;
-            height: 100%;
-            overflow-y: hidden;
-        }
-
-        #loadingdiv {
-            top: 0;
-            bottom: 0;
-            right: 0;
-            left: 0;
-            width: fit-content;
-            height: fit-content;
-            margin: auto;
-            position: absolute;
-        }
-
-        .pagewrapperdiv {
-            width: 100%;
-            height: 100%;
-        }
-
-        .curpagediv {
-            width: 100%;
-            text-align: center;
-            display: inline-block;
-            font-size: 14px;
-            color: rgba(0, 0, 0, 0.5);
-        }
-
-        .pagediv {
-            display: flex;
-            float: left;
-            width: 100%;
-            height: 97%;
-            overflow-y: hidden;
-        }
-
-        .leftpagediv,
-        .rightpagediv {
-            padding: 3% 3% 0% 3%;
-            width: 44%;
-            height: fit-content;
-        }
-
-        .para {
-            margin: 16px;
-        }
-
-        .word {
-            height: fit-content;
-        }
-    </style>
+    <link rel="stylesheet" href="css_preimpl/preimpl.css">
     <link rel="stylesheet" href="css_preimpl/toolbox.css">
     <link rel="stylesheet" href="css_preimpl/sentencebox.css">
     <script>
@@ -452,6 +366,7 @@
         };
         // 程序入口
         var app = {
+            data: {},
             // 读取阅读进度
             init: function () {
                 let currentpage = storage.readCurrentPage();
@@ -460,6 +375,7 @@
                 window.scroll({ top: 0, left: contentdiv.children[currentpage].offsetLeft, behavior: "smooth" });
             },
             // 创建多个页，内容为data，data的每一行表示一个段落，data为span组成的字符串，创建的页会 append 到 contentdiv 中
+            // 由于`width`属性在宽度变化时效果改变，故需要手动处理
             appendPages: function (data = ["oops, something's wrong"]) {
                 let linelist = data;
                 let paralist = [];
@@ -474,6 +390,18 @@
                 let pagesinitcontentdiv = contentdiv.clientWidth / window.innerWidth;
                 let pagescurcontentdiv = 0;
                 let indexpara = 0;
+                // insert
+                let insertpara2lrpage = (paralist, indexpara, lrpagediv, targetheight) => {
+                    while (indexpara < paralist.length) {
+                        lrpagediv.appendChild(paralist[indexpara]);
+                        if (lrpagediv.clientHeight > targetheight) {
+                            lrpagediv.removeChild(lrpagediv.lastElementChild);
+                            break;
+                        }
+                        indexpara += 1;
+                    }
+                    return indexpara;
+                };
                 while (indexpara < paralist.length) {
                     // 最外层 div = page-div + current-page-div
                     let pagewrapperdiv = utility.create("div", classname_pagewrapperdiv);
@@ -489,59 +417,49 @@
                     let rightpagediv = utility.create("div", classname_rpagediv);
                     pagediv.appendChild(leftpagediv);
                     pagediv.appendChild(rightpagediv);
-                    // insert
-                    let insertpara2lrpage = (paralist, indexpara, lrpagediv, targetheight) => {
-                        while (indexpara < paralist.length) {
-                            lrpagediv.appendChild(paralist[indexpara]);
-                            if (lrpagediv.clientHeight > targetheight) {
-                                lrpagediv.removeChild(lrpagediv.lastElementChild);
-                                break;
-                            }
-                            indexpara += 1;
-                        }
-                        return indexpara;
-                    };
-                    let tmpindex = insertpara2lrpage(paralist, indexpara, leftpagediv, targetheight);
-                    // FIXME 无法添加更多元素
-                    if (tmpindex == indexpara) {
-                        console.log("error! tmpindex: " + tmpindex);
-                        break;
-                    }
-                    indexpara = tmpindex;
-                    tmpindex = insertpara2lrpage(paralist, indexpara, rightpagediv, targetheight);
-                    if (tmpindex == indexpara) {
-                        console.log("error! tmpindex: " + tmpindex);
-                        break;
-                    }
-                    indexpara = tmpindex;
-
+                    indexpara = insertpara2lrpage(paralist, indexpara, leftpagediv, targetheight);
+                    if (indexpara < paralist.length)
+                        indexpara = insertpara2lrpage(paralist, indexpara, rightpagediv, targetheight);
                     // 显示当前页的 div
                     let curpagediv = utility.create("div", classname_curpagediv);
-                    curpagediv.innerText = pagescurcontentdiv;
-
+                    curpagediv.innerText = (pagesinitcontentdiv + pagescurcontentdiv);
                     pagewrapperdiv.appendChild(curpagediv);
+                }
+            },
+            // 更改书名，章节标题样式
+            preprocess: function (chapter, chapterindex, title) {
+                let lines = chapter["lines"];
+                let chaptitleline = utility.wrapTitle(utility.wrapLine(chapter["title"]), utility.typeWrapper.chtitle, chapterindex);
+                let reslines = [chaptitleline].concat(utility.wrapLines(lines));
+                if (chapterindex == 0)
+                    reslines = [utility.wrapTitle(utility.wrapLine(title), utility.typeWrapper.htitle)].concat(reslines);
+                return reslines;
+            },
+            // 添加一个章节内容
+            appendChapter: function (chapterindex) {
+                if (chapterindex < app.data["chapterCount"]) {
+                    app.appendPages(app.preprocess(app.data["chapters"][chapterindex], chapterindex, app.data["title"]));
                 }
             },
             // 加载数据 - 显示每一页 - 注册监听器...
             run() {
                 let onsuccess = (data) => {
-                    utility.byid("loadingdiv").style.visibility = "hidden";
-                    // 更改书名，章节标题样式
-                    let preprocess = (chapter, index, title) => {
-                        let lines = chapter["lines"];
-                        let chaptitleline = utility.wrapTitle(utility.wrapLine(chapter["title"]), utility.typeWrapper.chtitle, index);
-                        let reslines = [chaptitleline].concat(utility.wrapLines(lines));
-                        if (index == 0)
-                            reslines = [utility.wrapTitle(utility.wrapLine(title), utility.typeWrapper.htitle)].concat(reslines);
-                        return reslines;
-                    };
-                    for (let i = 0; i < Math.min(data["chapterCount"], 10); i++) {
-                        console.log("CHAPTER: " + num2engword[i]);
-                        app.appendPages(preprocess(data["chapters"][i], i, data["title"]));
+                    app.data = data;
+                    let chapterCount = data["chapterCount"];
+                    let timeoutval = 150;
+                    for (let i = 0; i < chapterCount; i++) {
+                        setTimeout(() => {
+                            app.appendChapter(i);
+                            utility.byid("loadingbar").setAttribute("value", (i + 1) / chapterCount * 100);
+                            if (i == chapterCount - 1) {
+                                pageTurner.registerEvent();
+                                wordTranslateTool.registerEvent();
+                                sentenceTool.registerEvent();
+                                utility.byid("contentdiv").style.visibility = "visible";
+                                utility.byid("loadingdiv").style.visibility = "hidden";
+                            }
+                        }, i * timeoutval);
                     }
-                    pageTurner.registerEvent();
-                    wordTranslateTool.registerEvent();
-                    sentenceTool.registerEvent();
                 };
                 let onfailed = () => {
                     utility.byid("loadingdiv").innerText = "failed to load file";
@@ -642,9 +560,37 @@
                         onsuccess(data);
                     }
                 });
-            }
+            },
+            // 测试移除child
+            testRemoveChild: function () {
+                let a = document.getElementById("contentdiv");
+                a.removeChild(a.children[0]);
+                a.style.width = (Number(a.clientWidth / window.innerWidth) - 1) * 100 + "%";
+                a.setAttribute(attrPageCurContDiv, Number(a.getAttribute(attrPageCurContDiv) - 1));
+            },
+            testAddChild: function () {
+                let pagewrapper = document.createElement("div");
+                pagewrapper.className = classname_pagewrapperdiv;
+                let pagediv = document.createElement("div");
+                pagediv.className = classname_pagediv;
+                pagediv.innerText = "ooooooooooooooooooooooooooooooooooooooooooo";
+                pagewrapper.appendChild(pagediv);
+                let contentdiv = utility.byid("contentdiv");
+                contentdiv.appendChild(pagewrapper);
+                contentdiv.style.width = ((contentdiv.clientWidth / window.innerWidth) + 1) * 100 + "%";
+            },
+            testHowManyChildren: function () {
+                let contentdiv = utility.byid("contentdiv");
+                for (let i = 0; i < 150; i++) {
+                    let pagewrapper = utility.create("div", classname_pagewrapperdiv);
+                    let pagediv = utility.create("div", classname_pagediv);
+                    pagediv.innerText = "yiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii";
+                    pagewrapper.appendChild(pagediv);
+                    contentdiv.appendChild(pagewrapper);
+                    contentdiv.style.width = (i + 1) * 100 + "%";
+                }
+            },
         }
-
         window.onload = () => {
             app.run();
         }
@@ -689,7 +635,9 @@
             </div>
         </div>
     </div>
-    <div id="loadingdiv">loading...</div>
+    <div id="loadingdiv">loading...<br>
+        <progress id="loadingbar" value="0" max="100"></progress>
+    </div>
     <div id="contentdiv" page-current="0">
     </div>
 </body>
