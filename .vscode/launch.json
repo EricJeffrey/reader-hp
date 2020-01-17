@@ -5,11 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: 当前文件",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "${fileDirname}"
+        },
+        {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch Chrome against localhost",
-            "url": "http://localhost:8080/preimpl.html",
-            "webRoot": "${workspaceFolder}/pre_impl/"
+            "name": "frontend-chrome",
+            "url": "http://localhost:8080/index.html",
+            "webRoot": "${workspaceFolder}/frontend/"
         }
     ]
 }
