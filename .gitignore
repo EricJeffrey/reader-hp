@@ -5,3 +5,5 @@ tmp*.*
 ecdict.csv
 
 .vscode/.ropeproject
+
+backend/svr/halox

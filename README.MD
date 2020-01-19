@@ -27,10 +27,10 @@
 
 包括翻译，词、句记录，App前端数据等API
 
-| name            | request                      | response                                                                           |
-| --------------- | ---------------------------- | ---------------------------------------------------------------------------------- |
-| wordtrans       | GET wordtrans?word=xxx       | {"word": "about","phonetic": "ә'baut","translation": "prep. 在...周围\nadv. 大约"} |
-| wordrec         | GET wordrec?word=xxx         | {"staus":1}                                                                        |
-| sentencerec     | GET sentencerec?sentence=xxx | {"staus":1}                                                                        |
-| app-allword     | GET appallword               | []                                                                                 |
-| app-allsentence | GET appallsentence           | []                                                                                 |
+| name            | request                      | response                                                                            |
+| --------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
+| wordtrans       | GET wordtrans?word=xxx       | {"status": 1/0, "data":{"word": "xxx","phonetic": "xxx","translation": "xxx\nxxx"}} |
+| wordrec         | GET wordrec?word=xxx         | {"staus":1/0}                                                                       |
+| sentencerec     | GET sentencerec?sentence=xxx | {"staus":1/0}                                                                       |
+| app-allword     | GET appallword               | []                                                                                  |
+| app-allsentence | GET appallsentence           | []                                                                                  |
