@@ -9,5 +9,13 @@
     ],
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true
+    "python.linting.enabled": true,
+    "todo-tree.general.tags": [
+        "TODO",
+        "FIXME",
+        "todo"
+    ],
+    "todo-tree.highlights.defaultHighlight": {
+        "foreground": "cyan"
+    }
 }
