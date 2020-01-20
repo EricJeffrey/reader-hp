@@ -12,14 +12,23 @@
             height: 100%;
             overflow-y: hidden;
             background-color: whitesmoke;
+            font-size: 20px;
+            font-family: 'Times New Roman', Times, serif;
         }
 
-        .pageDiv {
+        #midDiv {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            width: 90%;
+            height: 85%;
+            text-align: justify;
+            overflow-y: hidden;
+            padding: 5%;
+            display: block;
+            left: 0px;
+            column-gap: 10%;
+            column-count: 2;
         }
-        
+
         @keyframes lastPageAnim4Left {
             0% {
                 left: -1920px;
@@ -42,46 +51,30 @@
     </style>
 
     <script>
-        window.onload = function () {
-            window.addEventListener("keydown", (event) => {
-                console.log(event);
-                if (event.code == "Space") {
-                    if (event.shiftKey) {
-                        let leftDiv = document.getElementById("leftDiv");
-                        let midDiv = document.getElementById("midDiv");
-                        let duration = "0.75s";
-                        let timingFunction = "cubic-bezier(0.12, 1, 0.1, 1)";
-                        
-                        leftDiv.style.animationName = "lastPageAnim4Left";
-                        leftDiv.style.animationDuration = duration;
-                        leftDiv.style.animationTimingFunction = timingFunction;
-                        leftDiv.style.animationFillMode = "ease";
-                        leftDiv.style.left = "0px";
-                        
-                        midDiv.style.animationName = "lastPageAnim4Mid";
-                        midDiv.style.animationDuration = duration;
-                        midDiv.style.animationTimingFunction = timingFunction;
-                        midDiv.style.left = "1920px";
-                    } else {
-                        window.scroll({ left: 1920, top: 0, behavior: "smooth" });
-                    }
-                }
-            });
-        };
+        function twoColumnPage() {
+            let newTmpSpan = () => {
+                let ret = document.createElement("span");
+                ret.innerText = "intelligent ";
+                return ret;
+            };
+            let midDiv = document.getElementById("midDiv");
+            let i = 0;
+            while (true) {
+                let tmpSpan = newTmpSpan();
+                midDiv.appendChild(tmpSpan);
+                i++;
+                console.log(tmpSpan.offsetLeft);
+                if (tmpSpan.offsetLeft > 1920 || i > 1000) break;
+            }
+        }
     </script>
 </head>
 
 <body>
+    <input style="position: absolute;z-index: 10;" type="button" value="two-column-per-page" onclick="twoColumnPage()">
     <!-- 更好的加载方式 -- 使用 绝对位置+过渡动画 的方式实现翻页 -->
     <div id="contentDiv">
-        <div id="leftDiv" class="pageDiv" style="left: -1920px;">
-            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-        </div>
-        <div id="midDiv" class="pageDiv" style="left: 0px;">
-            bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-        </div>
-        <div id="rightDiv" class="pageDiv" style="left: 1920px;">
-            cccccccccccccccccccccccccccccccccccccccccccc
+        <div id="midDiv" class="pageDiv">
         </div>
     </div>
 </body>
