@@ -35,24 +35,24 @@
         // todo 分章节加载，前后端接口，字典后端
         var dataLoader = {
             loadArticle: function (onsuccess, onfailed) {
-                $.get("resources/HP3-EN.json", (data, status) => {
-                    console.log(status);
+                $.get("resources/tmphp3.json", (data, status) => {
                     if (status == "success") onsuccess(data);
                     else onfailed(data, status);
                 }).fail(onfailed);
             },
             // todo 确定前后端接口 
             loadWordTrans: function (word, onsuccess, onfailed) {
-                setTimeout(() => {
-                    let res = {
-                        "word": "about",
-                        "phonetic": "ә'baut",
-                        "translation": "\"prep. 在...周围，大约 有关 关于\nadv. 大约 四处 在附近 周围\""
-                    };
-                    let status = "fail";
-                    if (Math.random() > 0.5) onsuccess(res);
-                    else onfailed(status);
-                }, 20);
+                $.ajax({
+                    url: "http://192.168.186.131:8686/cgi/wordtrans?word=" + word.toLowerCase(),
+                    type: "GET",
+                    timeout: 30000,
+                    async: true,
+                    success: (data, status, xhr) => {
+                        let res = JSON.parse(data);
+                        if (res["status"] == 1) onsuccess(data);
+                        else onfailed(data, status)
+                    }
+                }).fail(onfailed);
             }
         };
 
@@ -97,6 +97,7 @@
                 }
                 return ret;
             },
+            // todo 重新设计数据加载过程，考虑各种标题，将 lether-bound 之类的词分成两个
             // 将 line 中由空格隔开的串加上 <span class="word"> 标签
             wrapLine: function (line) {
                 let wordlist = line.split(' ');
@@ -129,7 +130,19 @@
                     reslines.push(this.wrapLine(line));
                 });
                 return reslines;
-            }
+            },
+            wordTrans2Str: function (wordTrans) {
+                // todo 更好的翻译内容展示
+                wordTrans = JSON.parse(wordTrans);
+                let data = wordTrans["data"];
+                let tmpbr = "\n";
+                let res = data["word"] + " [" + data["phonetic"] + "]" + tmpbr;
+                let transList = data["translation"].split('\n');
+                transList.forEach(tmp => {
+                    res += tmp + tmpbr;
+                });
+                return res;
+            },
         };
 
         // 存储 - 记录阅读进度
@@ -197,24 +210,29 @@
 
         // 单词翻译
         var wordTranslateTool = {
-            // word-mouseover: 移动到单词 -> 未显示? -> 设置超时 -> 超时显示
+            /*
+            鼠标移到单词，悬浮一定时间，如果鼠标仍然在当前单词上，获取单词翻译，得到单词翻译后，如果鼠标仍然在当前单词上，则显示单词翻译
+
+            鼠标移动到单词 - 设置当前 (当前存在超时函数 - 清除超时函数) - (当前正在获取翻译 - 忽略)
+            */
+            // word-mouseover: 移动到单词 -> 未显示? -> 设置超时 -> 超时到 -> 获取单词翻译 -> 显示
             // word-mousemove: 捕获阶段，结束分发
             // window-mouseover: 已经显示 -> 鼠标不在 box 和 target 上? -> 隐藏
             //                   未显示 -> 清除已经设置的timeout
             hoverStatus: {
                 target: null,
                 pendingTimoutId: null,
-                WaitTimeInMM: 600,
-                clearPending: function () {
-                    if (this.pendingTimoutId != null)
-                        clearTimeout(this.pendingTimoutId);
-                    this.pendingTimoutId = null;
-                    this.target = null;
-                },
-                setPending: function (target, pendingId) {
-                    this.target = target;
-                    this.pendingTimoutId = pendingId;
-                }
+                WaitTimeInMM: 0,
+                // clearPending: function () {
+                //     if (this.pendingTimoutId != null)
+                //         clearTimeout(this.pendingTimoutId);
+                //     this.pendingTimoutId = null;
+                //     this.target = null;
+                // },
+                // setPending: function (target, pendingId) {
+                //     this.target = target;
+                //     this.pendingTimoutId = pendingId;
+                // }
             },
             boxStatus: {
                 showing: false,
@@ -241,7 +259,6 @@
                 // wordspan 太靠右
                 if (window.innerWidth - wordOffsetLeft <= utility.pxstr2number(stylebox.width)) {
                     wordBox.style.left = (pageOffset + wordOffsetLeft + wordspan.offsetWidth - utility.pxstr2number(stylebox.width)) + "px";
-                    // wordBox.style.right = (pageOffset + wordOffsetLeft + wordspan.offsetWidth) + "px"; 
                 }
                 wordBox.style.visibility = "visible";
                 wordBox.style.animation = "boxanimation_show 0.2s";
@@ -263,32 +280,29 @@
                 for (let i = 0; i < wordlist.length; i++) {
                     const word = wordlist[i];
                     let _this = this;
-                    word.addEventListener("mouseover", (event) => {
-                        // 已经显示 box 的话，由 window 处理; 已经开始选择文本，屏蔽wordbox
-                        if (this.boxStatus.showing || sentenceTool.selectStatus.selecting)
-                            return;
-                        // 正在等待显示，删除超时函数
-                        this.hoverStatus.clearPending();
-                        let timeoutFunc = function () {
-                            // 鼠标移动到其它地方
-                            if (_this.hoverStatus.target != event.target)
-                                return;
-                            // 加载翻译
-                            dataLoader.loadWordTrans(
-                                _this.hoverStatus.target.innerText,
-                                function onsuccess(wordtrans) {
-                                    // todo 翻译格式化
-                                    utility.byid("tranbox").innerText = JSON.stringify(wordtrans);
-                                    _this.showWordBox(word);
-                                },
-                                function onfailed() {
-                                    utility.byid("tranbox").innerText = "failed to get translation";
-                                    _this.showWordBox(word);
-                                }
-                            );
-                        };
-                        this.hoverStatus.setPending(word, setTimeout(timeoutFunc, this.hoverStatus.WaitTimeInMM, event));
-                    });
+                    let mouseOverListener = function (event) {
+                        // 加载翻译
+                        _this.hoverStatus.target = event.target;
+                        dataLoader.loadWordTrans(
+                            _this.hoverStatus.target.innerText,
+                            function onsuccess(wordtrans) {
+                                // 鼠标移动到其它地方
+                                if (_this.hoverStatus.target != event.target)
+                                    return;
+                                // 已经显示 box 的话，由 window 处理; 已经开始选择文本，屏蔽wordbox
+                                if (_this.boxStatus.showing || sentenceTool.selectStatus.selecting)
+                                    return;
+                                // todo 翻译格式化
+                                utility.byid("tranbox").innerText = utility.wordTrans2Str(wordtrans);
+                                _this.showWordBox(word);
+                            },
+                            function onfailed() {
+                                utility.byid("tranbox").innerText = "failed to get translation";
+                                _this.showWordBox(word);
+                            }
+                        );
+                    };
+                    word.addEventListener("mouseover", mouseOverListener);
                     word.addEventListener("mousemove", (event) => {
                         event.stopPropagation();
                     }, { capture: true });
@@ -305,11 +319,9 @@
                             return ex >= left && ex <= left + width && ey >= top && ey <= top + height;
                         }
                         // 鼠标移动到其它地方了
-                        if (!inWordBox(event, this.boxStatus.box) && !inWordBox(event, this.boxStatus.wordSpanTarget))
+                        if (!inWordBox(event, this.boxStatus.box) && !inWordBox(event, this.boxStatus.wordSpanTarget)) {
                             this.hideWordBox();
-                    }
-                    else {
-                        this.hoverStatus.clearPending();
+                        }
                     }
                 });
             },

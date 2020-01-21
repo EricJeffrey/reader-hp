@@ -46,6 +46,7 @@ def queryWord(word: str, conn: connector.MySQLConnection):
                    (dictTableName, word))
     return cursor.fetchone()
 
+
 #  todo halox 文件类型 响应截断最后字符 cgi管理器
 if __name__ == "__main__":
     reqPara = parseQuery(os.environ["query"])
@@ -55,5 +56,10 @@ if __name__ == "__main__":
         tmpTrans = queryWord(reqPara['word'], conn)
         if tmpTrans != None:
             resp["status"] = 1
-            resp["data"] = tmpTrans
+            resp["data"] = {
+                "word": tmpTrans[0],
+                "phonetic": tmpTrans[1],
+                "translation": tmpTrans[2],
+                "exchange": tmpTrans[3]
+            }
     print(json.dumps(resp, ensure_ascii=False))
