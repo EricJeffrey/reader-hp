@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>ColumnBased</title>
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            padding: 0px;
+            overflow-y: hidden;
+            font-size: 20px;
+            font-family: 'Times New Roman', Times, serif;
+            text-align: justify;
+        }
+
+        .pLast {
+            text-align-last: justify;
+        }
+    </style>
+    <script>
+        window.onload = function () {
+            let contentDiv = document.getElementById("contentDiv");
+            let data = "Ravenclaw played Slytherin a week after the start of term. Slytherin won, though narrowly. According to Wood, this was good news for Gryffindor, who would take second place if they beat Ravenclaw too. He therefore increased the number of team practices to five a leek. This meant that with Lupin's anti-dementor classes, which in themselves were more draining than six Quidditch practices, Harry had just one night a week to do all his homework. Even so, he was showing the strain nearly as much as Hermione, whose immense workload finally seemed to be getting to her. Every night, without fail, Hermione was to be seen in a corner of the common room, several tables spread with books, Arithmancy charts, rune dictionaries, diagrams of Muggles lifting heavy objects, and file upon file of extensive notes; she barely spoke to anybody and snapped when she was interrupted.".split(' ');
+            let i = 0;
+            while (leftPageDiv.clientHeight <= contentDiv.clientHeight) {
+                targetP.innerText += " " + data[i];
+                i++;
+            }
+            targetP.innerText = targetP.innerText.substr(0, targetP.innerText.lastIndexOf(' '));
+            while (i < data.length) {
+                targetP2.innerText += " " + data[i];
+                i++;
+            }
+        };
+    </script>
+</head>
+
+<body>
+    <div id="contentDiv" style="width: 100%;height: 96%;">
+        <div id="leftPageDiv" style="width: 50%;margin-left: 120px;">
+            <p>
+                Ravenclaw played Slytherin a week after the start of term. Slytherin won, though narrowly. According to
+                Wood, this was good news for Gryffindor, who would take second place if they beat Ravenclaw too. He
+                therefore increased the number of team practices to five a leek. This meant that with Lupin's
+                anti-dementor classes, which in themselves were more draining than six Quidditch practices, Harry had
+                just one night a week to do all his homework. Even so, he was showing the strain nearly as much as
+                Hermione, whose immense workload finally seemed to be getting to her. Every night, without fail,
+                Hermione was to be seen in a corner of the common room, several tables spread with books, Arithmancy
+                charts, rune dictionaries, diagrams of Muggles lifting heavy objects, and file upon file of extensive
+                notes; she barely spoke to anybody and snapped when she was interrupted.
+            </p>
+            <p>
+                Ravenclaw played Slytherin a week after the start of term. Slytherin won, though narrowly. According to
+                Wood, this was good news for Gryffindor, who would take second place if they beat Ravenclaw too. He
+                therefore increased the number of team practices to five a leek. This meant that with Lupin's
+                anti-dementor classes, which in themselves were more draining than six Quidditch practices, Harry had
+                just one night a week to do all his homework. Even so, he was showing the strain nearly as much as
+                Hermione, whose immense workload finally seemed to be getting to her. Every night, without fail,
+                Hermione was to be seen in a corner of the common room, several tables spread with books, Arithmancy
+                charts, rune dictionaries, diagrams of Muggles lifting heavy objects, and file upon file of extensive
+                notes; she barely spoke to anybody and snapped when she was interrupted.
+            </p>
+            <p>
+                Ravenclaw played Slytherin a week after the start of term. Slytherin won, though narrowly. According to
+                Wood, this was good news for Gryffindor, who would take second place if they beat Ravenclaw too. He
+                therefore increased the number of team practices to five a leek. This meant that with Lupin's
+                anti-dementor classes, which in themselves were more draining than six Quidditch practices, Harry had
+                just one night a week to do all his homework. Even so, he was showing the strain nearly as much as
+                Hermione, whose immense workload finally seemed to be getting to her. Every night, without fail,
+                Hermione was to be seen in a corner of the common room, several tables spread with books, Arithmancy
+                charts, rune dictionaries, diagrams of Muggles lifting heavy objects, and file upon file of extensive
+                notes; she barely spoke to anybody and snapped when she was interrupted.
+            </p>
+            <p>
+                Ravenclaw played Slytherin a week after the start of term. Slytherin won, though narrowly. According to
+                Wood, this was good news for Gryffindor, who would take second place if they beat Ravenclaw too. He
+                therefore increased the number of team practices to five a leek. This meant that with Lupin's
+                anti-dementor classes, which in themselves were more draining than six Quidditch practices, Harry had
+                just one night a week to do all his homework. Even so, he was showing the strain nearly as much as
+                Hermione, whose immense workload finally seemed to be getting to her. Every night, without fail,
+                Hermione was to be seen in a corner of the common room, several tables spread with books, Arithmancy
+                charts, rune dictionaries, diagrams of Muggles lifting heavy objects, and file upon file of extensive
+                notes; she barely spoke to anybody and snapped when she was interrupted.
+            </p>
+            <p class="pLast" id="targetP">
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>
