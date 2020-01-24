@@ -10,73 +10,323 @@
         html,
         body {
             height: 100%;
+            width: 100%;
+            margin: 0px;
+            padding: 0px;
+            font-size: 22px;
+            font-family: 'Times New Roman', Times, serif;
             overflow-y: hidden;
             background-color: whitesmoke;
-            font-size: 20px;
-            font-family: 'Times New Roman', Times, serif;
-        }
-
-        #midDiv {
-            position: absolute;
-            width: 90%;
-            height: 85%;
             text-align: justify;
+        }
+
+        .containerDiv {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
             overflow-y: hidden;
-            padding: 5%;
-            display: block;
-            left: 0px;
-            column-gap: 10%;
-            column-count: 2;
         }
 
-        @keyframes lastPageAnim4Left {
-            0% {
-                left: -1920px;
-            }
-
-            100% {
-                left: 0px;
-            }
+        .pageWrapperDiv {
+            flex: 150;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            margin-bottom: 20px;
         }
 
-        @keyframes lastPageAnim4Mid {
-            0% {
-                left: 0px;
-            }
+        .bottomBarDiv {
+            flex: 5;
+            background-color: lightsteelblue;
+        }
 
-            100% {
-                left: 1920px;
-            }
+        .leftPageDiv,
+        .rightPageDiv {
+            width: 46%;
+            margin: 2%;
+            height: fit-content;
+            overflow: hidden;
+        }
+
+        .pFirst {
+            margin-block-start: 0px;
+        }
+
+        .pLast {
+            text-align-last: justify;
         }
     </style>
-
     <script>
-        function twoColumnPage() {
-            let newTmpSpan = () => {
-                let ret = document.createElement("span");
-                ret.innerText = "intelligent ";
-                return ret;
-            };
-            let midDiv = document.getElementById("midDiv");
-            let i = 0;
+        /**
+        
+        前端任务
+        1. 从后端获取JSON数据
+        2. 将每个章节的段落字符串分隔为使用span包裹的字符串列表 - 修改innerHtml 
+            `this is a lether-belt` --> <span>this</span> <span>is</span> <span>a</span> <span>lether</span>
+        3. 从localstorage获取阅读进度
+        4. 从阅读进度处 章节 段落 单词位置 处加载书籍内容
+        5. 注册 翻页、单词翻译、词句记录工具 的监听器
+
+        详细过程
+        1. 分隔段落字符串 
+        2. 从指定位置加载书籍内容
+        3. 翻页实现
+        4. 监听器状态机
+
+        用例流程
+        1. 阅读书籍
+            1. 获取书籍数据 JSON
+            2. 获取用户阅读记录 第几章 第几段
+            3. 从阅读记录处加载书本一页内容
+            4. 用户执行翻页操作
+                4.1 获取当前页 章节 段落 字符位置
+                4.1 获取下一页阅读内容 - 当前章节/下一章节
+                4.2 加载下一页内容
+        */
+
+        // 判断 ch 是否为字母
+        function isAlpha(ch) { return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'); }
+
+        // 将字符串列表的每一项合并为一个字符串
+        function joinStrList(strList) {
+            let ret = "";
+            strList.forEach(str => { ret += str; });
+            return ret;
+        }
+
+        // 创建一个由 tag 指定的 HTMLElement 并设置 className
+        function create(tag, className = null) {
+            let ret = document.createElement(tag);
+            if (className != null) ret.className = className;
+            return ret;
+        }
+
+        /**将段落字符串分隔为多个字符串列表 
+         * ["<span>this</span>", "<span>is</span>", "<span>a</span>", "<span>lether</span>"]
+        */
+        function splitParaToList(paraStr) {
+            let resList = [];
+            let wordList = paraStr.split(' ');
+            for (let i = 0; i < wordList.length; i++) {
+                const word = wordList[i];
+                let start = 0, curend = 0;
+                // 字符串中由 '-' 分隔的字符串
+                while (curend < word.length) {
+                    // 字母组成的串
+                    while (curend < word.length && isAlpha(word[curend])) curend++;
+                    if (curend > start && curend <= word.length)
+                        resList.push("<span class=\"word\">" + word.substring(start, curend) + "</span>");
+                    start = curend;
+                    // 非字母组成的串
+                    while (curend < word.length && !isAlpha(word[curend])) curend++;
+                    if (curend > start && curend <= word.length)
+                        resList.push(word.substring(start, curend));
+                    start = curend;
+                }
+                if (i < wordList.length - 1) resList.push(" ");
+            }
+            return resList;
+        }
+        /** 将创建的段落添加到 who 中并保证其高度不超过 targetHeight
+         * lineIndex - 有效行/段落序号
+         * charIndex - 有效字符序号
+         * 创建段落函数 - 获得当前段落字符串列表 - 添加每个元素 - (高度超过 - 删除上一个字符串 - 设置当前段落class - break) - 下一段落
+         **/
+        function appendParaToLRPage(data, chapterIndex, lineIndex, charIndex, who, targetHeight) {
+            // 第一个 <p> 标签不需要 margin-top
+            let first = true;
+            let chapter = data["chapters"][chapterIndex];
+            // 左边 div 添加元素
+            let curLineIndex = lineIndex, curCharIndex = charIndex;
+            who.setAttribute("chapterIndex", chapterIndex);
+            who.setAttribute("lineIndexStart", lineIndex);
+            who.setAttribute("charIndexStart", charIndex);
+            // 循环结束后 curLineIndex 与 curCharIndex 为div中最后一个段落与字符的位置
             while (true) {
-                let tmpSpan = newTmpSpan();
-                midDiv.appendChild(tmpSpan);
-                i++;
-                console.log(tmpSpan.offsetLeft);
-                if (tmpSpan.offsetLeft > 1920 || i > 1000) break;
+                console.log("who.height: " + who.clientHeight);
+                let tmpP = create("p");
+                if (first) tmpP.className += " pFirst", first = false;
+                who.appendChild(tmpP);
+                // 无法再放入一个空的 <p>
+                if (who.clientHeight > targetHeight) {
+                    curLineIndex -= 1;
+                    curCharIndex = chapter["lines"][curLineIndex].length;
+                    who.removeChild(who.lastElementChild);
+                    break;
+                }
+                let curLineStr = chapter["lines"][curLineIndex];
+                // 获得字符串列表
+                let tmpStrList = splitParaToList(curLineStr.substring(curCharIndex, curLineStr.length));
+                let tmpInnerHtml = "";
+                tmpStrList.forEach(str => {
+                    tmpInnerHtml += str;
+                });
+                tmpP.innerHTML = tmpInnerHtml;
+                // 直接放入段落中不可行
+                if (who.clientHeight > targetHeight) {
+                    tmpP.innerHTML = "";
+                    // 是否在某一行加载完
+                    let breakInLine = false;
+                    for (let i = 0; i < tmpStrList.length; i++) {
+                        const str = tmpStrList[i];
+                        tmpP.innerHTML += str;
+                        // 无法放入更多的字符，将刚加入的字符串删除
+                        if (who.clientHeight > targetHeight) {
+                            tmpP.innerHTML = tmpP.innerHTML.substring(0, tmpP.innerHTML.length - str.length);
+                            tmpP.className += " pLast";
+                            breakInLine = true;
+                            break;
+                        }
+                        if (str.startsWith("<span", 0)) curCharIndex += str.length - 26;
+                        else curCharIndex += str.length;
+                    }
+                    // 行中间结束 或者 全部行/段落加载完
+                    if (breakInLine || curLineIndex >= chapter["lineCount"] - 1)
+                        break;
+                    curLineIndex += 1, curCharIndex = 0;
+                } else {
+                    curCharIndex = 0;
+                    curLineIndex += 1;
+                }
+            }
+            who.setAttribute("lineIndexEnd", curLineIndex);
+            who.setAttribute("charIndexEnd", curCharIndex);
+            return { lineIndexEnd: curLineIndex, charIndexEnd: curCharIndex };
+        };
+        // 从阅读进度处 章节 段落 单词位置 处加载书籍内容到指定 位置
+        function loadPageFrom(data, chapterIndex, lineIndex, charIndex, left = 0) {
+            // 创建页面的 div 元素
+            let containerDiv = create("div", "containerDiv");
+            containerDiv.style.left = left + "px";
+            document.body.appendChild(containerDiv);
+            let pageWrapperDiv = create("div", "pageWrapperDiv");
+            let bottomBarDiv = create("div", "bottomBarDiv");
+            containerDiv.appendChild(pageWrapperDiv);
+            containerDiv.appendChild(bottomBarDiv);
+            let leftPageDiv = create("div", "leftPageDiv");
+            let rightPageDiv = create("div", "rightPageDiv");
+            pageWrapperDiv.appendChild(leftPageDiv);
+            pageWrapperDiv.appendChild(rightPageDiv);
+            let chapter = data["chapters"][chapterIndex];
+            let targetHeight = pageWrapperDiv.clientHeight;
+
+            let tmpAppendRes = appendParaToLRPage(data, chapterIndex, lineIndex, charIndex, leftPageDiv, targetHeight);
+            console.log("leftPageRes: " + JSON.stringify(tmpAppendRes));
+            // 无需增加 charIndex，本身表示的就是下一个需要添加的字符
+            // tmpAppendRes.charIndexEnd += 1;
+            if (tmpAppendRes.charIndexEnd >= chapter["lines"][tmpAppendRes.lineIndexEnd].length)
+                tmpAppendRes.lineIndexEnd += 1, tmpAppendRes.charIndexEnd = 0;
+            if (tmpAppendRes.lineIndexEnd >= chapterIndex["lineCount"])
+                return 0;
+            tmpAppendRes = appendParaToLRPage(data, chapterIndex, tmpAppendRes.lineIndexEnd, tmpAppendRes.charIndexEnd, rightPageDiv, targetHeight);
+            console.log("rightPageRes: " + JSON.stringify(tmpAppendRes));
+        }
+
+        var tester = {
+            testSplitPara: function () {
+                let paraStr = "";
+                paraStr = "aha, this is 2019? and you're a lether-belt!";
+                paraStr = "2020-no-more-bug23333333!";
+                console.log("para: " + paraStr);
+                console.log("res: " + splitParaToList(paraStr));
+            },
+            // 测试 left/rightPageDiv 内容的构造
+            testLRPageCreate: function () {
+                let data = {
+                    
+                    "title": "Harry Potter and the Prisoner of Azkaban",
+                    "chapterCount": 2,
+                    "chapters": [
+                        {
+                            "title": "OWL POST",
+                            "lineCount": 24,
+                            "lines": [
+                                "Harry Potter was a highly unusual boy in many ways. For one thing, he hated the summer holidays more than any other time of year. For another, he really wanted to do his homework but was forced to do it in secret, in the dead of night. And he also happened to be a wizard.",
+                                "It was nearly midnight, and he was lying on his stomach in bed, the blankets drawn right over his head like a tent, a flashlight in one hand and a large leather-bound book (A History of Magic by Bathilda Bagshot) propped open against the pillow. Harry moved the tip of his eagle-feather quill down the page, frowning as he looked for something that would help him write his essay, \"Witch Burning in the Fourteenth Century Was Completely Pointless discuss.\"",
+                                "The quill paused at the top of a likely-looking paragraph. Harry Pushed his round glasses up the bridge of his nose, moved his flashlight closer to the book, and read:",
+                                "Non-magic people (more commonly known as Muggles) were particularly afraid of magic in medieval times, but not very good at recognizing it. On the rare occasion that they did catch a real witch or wizard, burning had no effect whatsoever. The witch or wizard would perform a basic Flame Freezing Charm and then pretend to shriek with pain while enjoying a gentle, tickling sensation. Indeed, Wendelin the Weird enjoyed being burned so much that she allowed herself to be caught no less than fortyseven times in various disguises.",
+                                "Harry put his quill between his teeth and reached underneath his pillow for his ink bottle and a roll of parchment. Slowly and very carefully he unscrewed the ink bottle, dipped his quill into it, and began to write, pausing every now and then to listen, because if any of the Dursleys heard the scratching of his quill on their way to the bathroom, he'd probably find himself locked in the cupboard under the stairs for the rest of the summer.",
+                                "The Dursley family of number four, Privet Drive, was the reason that Harry never enjoyed his summer holidays. Uncle Vernon, Aunt Petunia, and their son, Dudley, were Harry's only living relatives. They were Muggles, and they had a very medieval attitude toward magic. Harry's dead parents, who had been a witch and wizard themselves, were never mentioned under the Dursleys' roof For years, Aunt Petunia and Uncle Vernon had hoped that if they kept Harry as downtrodden as possible, they would be able to squash the magic out of him. To their fury, they had been unsuccessful. These days they lived in terror of anyone finding out that Harry had spent most of the last two years at Hogwarts School of Witchcraft and Wizardry. The most they could do, however, was to lock away Harry's spellbooks, wand, cauldron, and broomstick at the start of the summer break, and forbid him to talk to the neighbors.",
+                                "This separation from his spellbooks had been a real problem for Harry, because his teachers at Hogwarts had given him a lot of holiday work. One of the essays, a particularly nasty one about shrinking potions, was for Harry's least favorite teacher, Professor Snape, who would be delighted to have an excuse to give Harry detention for a month. Harry had therefore seized his chance in the first week of the holidays. While Uncle Vernon, Aunt Petunia, and Dudley had gone out into the front garden to admire Uncle Vernon's new company car (in very loud voices, so that the rest of the street would notice it too), Harry had crept downstairs, picked the lock on the cupboard under the stairs, grabbed some of his books, and hidden them in his bedroom. As long as he didn't leave spots of ink on the sheets, the Dursleys need never know that he was studying magic by night.",
+                                "Harry was particularly keen to avoid trouble with his aunt and uncle at the moment, as they were already in an especially bad mood with him, all because he'd received a telephone call from a fellow wizard one week into the school vacation.",
+                                "Ron Weasley, who was one of Harry's best friends at Hogwarts, came from a whole family of wizards. This meant that he knew a lot of things Harry didn't, but had never used a telephone before. Most unluckily, it had been Uncle Vernon who had answered the call.",
+                                "\"Vernon Dursley speaking.\"",
+                                "Harry, who happened to be in the room at the time, froze as he heard Ron's voice answer.",
+                                "\"HELLO? HELLO? CAN YOU HEAR ME? I -- WANT -- TO -- TALK -- TO -- HARRY -- POTTER!\"",
+                                "Ron was yelling so loudly that Uncle Vernon jumped and held the receiver a foot away from his ear, staring at it with an expression of mingled fury and alarm.",
+                                "\"WHO IS THIS?\" he roared in the direction of the mouthpiece. \"WHO ARE YOU?\"",
+                                "\"RON -- WEASLEY!\" Ron bellowed back, as though he and Uncle Vernon were speaking from opposite ends of a football field. \"I'M -- A -- FRIEND -- OF -- HARRY'S -- FROM -- SCHOOL --\"",
+                                "Uncle Vernon's small eyes swiveled around to Harry, who was rooted to the spot.",
+                                "\"THERE IS NO HARRY POTTER HERE!\" he roared, now holding the receiver at arm's length, as though frightened it might explode. \"I DON'T KNOW WHAT SCHOOL YOURE TALKING ABOUT! NEVER CONTACT ME AGAIN! DON'T YOU COME NEAR MY FAMILY!\"",
+                                "And he threw the receiver back onto the telephone as if dropping a poisonous spider.",
+                                "The fight that had followed had been one of the worst ever.",
+                                "\"HOW DARE YOU GIVE THIS NUMBER TO PEOPLE LIKE -- PEOPLE LIKE YOU!\" Uncle Vernon had roared, spraying Harry with spit.",
+                                "Ron obviously realized that he'd gotten Harry into trouble, because he hadn't called again. Harry's other best friend from Hogwarts, Hermione Granger, hadn't been in touch either. Harry suspected that Ron had warned Hermione not to call, which was a pity, because Hermione, the cleverest witch in Harry's year, had Muggle parents, knew perfectly well how to use a telephone, and would probably have had enough sense not to say that she went to Hogwarts.",
+                                "So Harry had had no word from any of his wizarding friends for five long weeks, and this summer was turning out to be almost as bad as the last one. There was just one very small improvement -- after swearing that he wouldn't use her to send letters to any of his friends, Harry had been allowed to let his owl, Hedwig, out at night. Uncle Vernon had given in because of the racket Hedwig made if she was locked in her cage all the time.",
+                                "Harry finished writing about Wendelin the Weird and paused to listen again. The silence in the dark house was broken only by the distant, grunting snores of his enormous cousin, Dudley. It must be very late, Harry thought. His eyes were itching with tiredness. Perhaps he'd finish this essay tomorrow night....",
+                                "He replaced the top of the ink bottle; pulled an old pillowcase from under his bed; put the flashlight, A History of Magic, his essay, quill, and ink inside it; got out of bed; and hid the lot under a loose floorboard under his bed. Then he stood up, stretched, and checked the time on the luminous alarm clock on his bedside table."
+                            ]
+                        },
+                        {
+                            "title": "OWL POST",
+                            "lineCount": 24,
+                            "lines": [
+                                "Harry Potter was a highly unusual boy in many ways. For one thing, he hated the summer holidays more than any other time of year. For another, he really wanted to do his homework but was forced to do it in secret, in the dead of night. And he also happened to be a wizard.",
+                                "It was nearly midnight, and he was lying on his stomach in bed, the blankets drawn right over his head like a tent, a flashlight in one hand and a large leather-bound book (A History of Magic by Bathilda Bagshot) propped open against the pillow. Harry moved the tip of his eagle-feather quill down the page, frowning as he looked for something that would help him write his essay, \"Witch Burning in the Fourteenth Century Was Completely Pointless discuss.\"",
+                                "The quill paused at the top of a likely-looking paragraph. Harry Pushed his round glasses up the bridge of his nose, moved his flashlight closer to the book, and read:",
+                                "Non-magic people (more commonly known as Muggles) were particularly afraid of magic in medieval times, but not very good at recognizing it. On the rare occasion that they did catch a real witch or wizard, burning had no effect whatsoever. The witch or wizard would perform a basic Flame Freezing Charm and then pretend to shriek with pain while enjoying a gentle, tickling sensation. Indeed, Wendelin the Weird enjoyed being burned so much that she allowed herself to be caught no less than fortyseven times in various disguises.",
+                                "Harry put his quill between his teeth and reached underneath his pillow for his ink bottle and a roll of parchment. Slowly and very carefully he unscrewed the ink bottle, dipped his quill into it, and began to write, pausing every now and then to listen, because if any of the Dursleys heard the scratching of his quill on their way to the bathroom, he'd probably find himself locked in the cupboard under the stairs for the rest of the summer.",
+                                "The Dursley family of number four, Privet Drive, was the reason that Harry never enjoyed his summer holidays. Uncle Vernon, Aunt Petunia, and their son, Dudley, were Harry's only living relatives. They were Muggles, and they had a very medieval attitude toward magic. Harry's dead parents, who had been a witch and wizard themselves, were never mentioned under the Dursleys' roof For years, Aunt Petunia and Uncle Vernon had hoped that if they kept Harry as downtrodden as possible, they would be able to squash the magic out of him. To their fury, they had been unsuccessful. These days they lived in terror of anyone finding out that Harry had spent most of the last two years at Hogwarts School of Witchcraft and Wizardry. The most they could do, however, was to lock away Harry's spellbooks, wand, cauldron, and broomstick at the start of the summer break, and forbid him to talk to the neighbors.",
+                                "This separation from his spellbooks had been a real problem for Harry, because his teachers at Hogwarts had given him a lot of holiday work. One of the essays, a particularly nasty one about shrinking potions, was for Harry's least favorite teacher, Professor Snape, who would be delighted to have an excuse to give Harry detention for a month. Harry had therefore seized his chance in the first week of the holidays. While Uncle Vernon, Aunt Petunia, and Dudley had gone out into the front garden to admire Uncle Vernon's new company car (in very loud voices, so that the rest of the street would notice it too), Harry had crept downstairs, picked the lock on the cupboard under the stairs, grabbed some of his books, and hidden them in his bedroom. As long as he didn't leave spots of ink on the sheets, the Dursleys need never know that he was studying magic by night.",
+                                "Harry was particularly keen to avoid trouble with his aunt and uncle at the moment, as they were already in an especially bad mood with him, all because he'd received a telephone call from a fellow wizard one week into the school vacation.",
+                                "Ron Weasley, who was one of Harry's best friends at Hogwarts, came from a whole family of wizards. This meant that he knew a lot of things Harry didn't, but had never used a telephone before. Most unluckily, it had been Uncle Vernon who had answered the call.",
+                                "\"Vernon Dursley speaking.\"",
+                                "Harry, who happened to be in the room at the time, froze as he heard Ron's voice answer.",
+                                "\"HELLO? HELLO? CAN YOU HEAR ME? I -- WANT -- TO -- TALK -- TO -- HARRY -- POTTER!\"",
+                                "Ron was yelling so loudly that Uncle Vernon jumped and held the receiver a foot away from his ear, staring at it with an expression of mingled fury and alarm.",
+                                "\"WHO IS THIS?\" he roared in the direction of the mouthpiece. \"WHO ARE YOU?\"",
+                                "\"RON -- WEASLEY!\" Ron bellowed back, as though he and Uncle Vernon were speaking from opposite ends of a football field. \"I'M -- A -- FRIEND -- OF -- HARRY'S -- FROM -- SCHOOL --\"",
+                                "Uncle Vernon's small eyes swiveled around to Harry, who was rooted to the spot.",
+                                "\"THERE IS NO HARRY POTTER HERE!\" he roared, now holding the receiver at arm's length, as though frightened it might explode. \"I DON'T KNOW WHAT SCHOOL YOURE TALKING ABOUT! NEVER CONTACT ME AGAIN! DON'T YOU COME NEAR MY FAMILY!\"",
+                                "And he threw the receiver back onto the telephone as if dropping a poisonous spider.",
+                                "The fight that had followed had been one of the worst ever.",
+                                "\"HOW DARE YOU GIVE THIS NUMBER TO PEOPLE LIKE -- PEOPLE LIKE YOU!\" Uncle Vernon had roared, spraying Harry with spit.",
+                                "Ron obviously realized that he'd gotten Harry into trouble, because he hadn't called again. Harry's other best friend from Hogwarts, Hermione Granger, hadn't been in touch either. Harry suspected that Ron had warned Hermione not to call, which was a pity, because Hermione, the cleverest witch in Harry's year, had Muggle parents, knew perfectly well how to use a telephone, and would probably have had enough sense not to say that she went to Hogwarts.",
+                                "So Harry had had no word from any of his wizarding friends for five long weeks, and this summer was turning out to be almost as bad as the last one. There was just one very small improvement -- after swearing that he wouldn't use her to send letters to any of his friends, Harry had been allowed to let his owl, Hedwig, out at night. Uncle Vernon had given in because of the racket Hedwig made if she was locked in her cage all the time.",
+                                "Harry finished writing about Wendelin the Weird and paused to listen again. The silence in the dark house was broken only by the distant, grunting snores of his enormous cousin, Dudley. It must be very late, Harry thought. His eyes were itching with tiredness. Perhaps he'd finish this essay tomorrow night....",
+                                "He replaced the top of the ink bottle; pulled an old pillowcase from under his bed; put the flashlight, A History of Magic, his essay, quill, and ink inside it; got out of bed; and hid the lot under a loose floorboard under his bed. Then he stood up, stretched, and checked the time on the luminous alarm clock on his bedside table."
+                            ]
+                        }]
+                };
+                loadPageFrom(data, 1, 2, 75, 1920);
             }
         }
+
+        let timingWork = (caller) => {
+            let a = Date.now();
+            caller();
+            console.log("time consumed: " + (Date.now() - a) + "ms");
+        };
+        window.onload = function () {
+            timingWork(tester.testLRPageCreate);
+        };
     </script>
 </head>
 
 <body>
-    <input style="position: absolute;z-index: 10;" type="button" value="two-column-per-page" onclick="twoColumnPage()">
-    <!-- 更好的加载方式 -- 使用 绝对位置+过渡动画 的方式实现翻页 -->
-    <div id="contentDiv">
-        <div id="midDiv" class="pageDiv">
+    <!-- <div class="containerDiv">
+        <div class="pageWrapperDiv">
+            <div class="leftPageDiv">
+                <p>Harry Potter was a highly unusual boy in many ways. For one thing, he hated the summer holidays more
+                    than any other time of year. For another, he really wanted to do his homework but was forced to do
+                    it in secret, in the dead of night. And he also happened to be a wizard.</p>
+            </div>
+            <div class="rightPageDiv"></div>
         </div>
-    </div>
+        <div class="bottomBarDiv"></div>
+    </div> -->
 </body>
+
 
 </html>

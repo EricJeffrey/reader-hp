@@ -16,8 +16,8 @@
             "type": "chrome",
             "request": "launch",
             "name": "frontend-chrome",
-            "url": "http://localhost:8080/index.html",
-            "webRoot": "${workspaceFolder}/frontend/"
+            "url": "http://localhost:8000/betterpageload.html",
+            "webRoot": "${workspaceFolder}/frontend/pre_impl/"
         }
     ]
 }
