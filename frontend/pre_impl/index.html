@@ -5,164 +5,300 @@
     <meta charset="UTF-8">
     <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" /> -->
     <title>HPReader</title>
-    <script>
-    </script>
-    <script>
-        function byid(id) {
-            return document.getElementById(id);
-        }
-        function hide(left) {
-            if (left) byid("content1").style.display = "none";
-            else byid("content2").style.display = "none";
-
-        }
-        let lines = ["出师表", "诸葛亮", "先帝创业未半而中道崩殂", "今天下三分", "益州疲弊", "此诚危急存亡之秋也", "然侍卫之臣不懈于内", "忠志之士忘身于外者", "盖追先帝之殊遇", "欲报之于陛下也", "诚宜开张圣听", "以光先帝遗德", "恢弘志士之气", "不宜妄自菲薄", "引喻失义", "以塞忠谏之路也", "宫中府中", "俱为一体", "陟罚臧否", "不宜异同", "若有作奸犯科及为忠善者", "宜付有司论其刑赏", "以昭陛下平明之理", "不宜偏私", "使内外异法也", "侍中、侍郎郭攸之、费祎、董允等", "此皆良实", "志虑忠纯", "是以先帝简拔以遗陛下", "愚以为宫中之事", "事无大小", "悉以咨之", "然后施行", "必能裨补阙漏", "有所广益", "将军向宠", "性行淑均", "晓畅军事", "试用于昔日", "先帝称之曰能", "是以众议举宠为督", "愚以为营中之事", "悉以咨之", "必能使行阵和睦", "优劣得所", "亲贤臣", "远小人", "此先汉所以兴隆也", "亲小人", "远贤臣", "此后汉所以倾颓也", "先帝在时", "每与臣论此事", "未尝不叹息痛恨于桓、灵也", "侍中、尚书、长史、参军", "此悉贞良死节之臣", "愿陛下亲之信之", "则汉室之隆", "可计日而待也", "臣本布衣", "躬耕于南阳", "苟全性命于乱世", "不求闻达于诸侯", "先帝不以臣卑鄙", "猥自枉屈", "三顾臣于草庐之中", "咨臣以当世之事", "由是感激", "遂许先帝以驱驰", "后值倾覆", "受任于败军之际", "奉命于危难之间", "尔来二十有一年矣", "先帝知臣谨慎", "故临崩寄臣以大事也", "受命以来", "夙夜忧叹", "恐托付不效", "以伤先帝之明", "故五月渡泸", "深入不毛", "今南方已定", "兵甲已足", "当奖率三军", "北定中原", "庶竭驽钝", "攘除奸凶", "兴复汉室", "还于旧都", "此臣所以报先帝而忠陛下之职分也", "至于斟酌损益", "进尽忠言", "则攸之、祎、允之任也", "愿陛下托臣以讨贼兴复之效", "不效", "则治臣之罪", "以告先帝之灵", "若无兴德之言", "则责攸之、祎、允等之慢", "以彰其咎", "陛下亦宜自谋", "以咨诹善道", "察纳雅言", "深追先帝遗诏", "臣不胜受恩感激", "今当远离", "临表涕零", "不知所言",
-        ];
-        function insertLine21() {
-            let bodydiv = byid("bodydiv");
-            let targetheight = bodydiv.clientHeight - bodydiv.style.paddingTop - bodydiv.style.paddingBottom - byid("tools").clientHeight;
-            console.log("targetheight: " + targetheight);
-            // insert lines to [who]
-            let work = (who, lines, index, targetheight) => {
-                let contentdiv = byid(who);
-                while (index < lines.length && contentdiv.clientHeight < targetheight) {
-                    const element = lines[index];
-                    let pele = document.createElement("p");
-                    pele.className = "para";
-                    pele.innerText = element;
-                    contentdiv.appendChild(pele);
-                    // console.log("client: " + contentdiv.clientHeight);
-                    index++;
-                }
-                if (contentdiv.clientHeight > targetheight && contentdiv.hasChildNodes) {
-                    contentdiv.removeChild(contentdiv.lastChild);
-                    index--;
-                }
-                // console.log(who + ": " + contentdiv.clientHeight);
-                return index;
-            };
-            let index = 0;
-            index = work("content1", lines, index, targetheight);
-            index = work("content2", lines, index, targetheight);
-            index = work("content3", lines, index, targetheight);
-            index = work("content4", lines, index, targetheight);
-            index = work("content5", lines, index, targetheight);
-            index = work("content6", lines, index, targetheight);
-        }
-
-        function moveIt() {
-            let content3div = byid("content3");
-
-            window.scroll({ top: 0, left: content3div.offsetLeft, behavior: "smooth" });
-        }
-
-        function nextPage() {
-            let bodydiv = byid("bodydiv");
-            // bodydiv.removeChild(bodydiv.children[0]);
-
-            window.scroll({ top: 0, left: bodydiv.children[3].offsetLeft, behavior: "smooth" });
-            /*
-            let bodydiv = byid("bodydiv");
-            let content3div = bodydiv.children[2];
-            console.log(content3div.offsetLeft);
-            let myscroll = true;
-            window.onscroll = (event) => {
-                console.log(window.scrollX);
-                if (myscroll && window.scrollX == content3div.offsetLeft) {
-                    bodydiv.removeChild(bodydiv.children[0]);
-                    bodydiv.removeChild(bodydiv.children[0]);
-                    myscroll = false;
-                }
-            };
-            window.scroll({ top: 0, left: content3div.offsetLeft, behavior: "smooth" });
-            myscroll = true;
-            */
-
-
-            // var tmpchild;
-            // tmpchild = bodydiv.removeChild(bodydiv.children[0]);
-            // console.log(tmpchild);
-            // tmpchild.innerText = "ahahah";
-            // bodydiv.appendChild(tmpchild);
-            // tmpchild = bodydiv.removeChild(bodydiv.children[0]);
-            // console.log(tmpchild);
-            // tmpchild.innerText = "bsbsbsbsb";
-            // bodydiv.appendChild(tmpchild);
-        }
-
-        function lastPage() {
-
-        }
-    </script>
+    <link rel="stylesheet" href="css_preimpl/toolbox.css">
     <style>
+        body,
         html {
             height: 100%;
             width: 100%;
+            overflow-y: hidden;
+            margin: 0px;
+            padding: 0px;
+            background-color: whitesmoke;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 21px;
+            text-align: justify;
         }
 
-        body {
-            background-color: rgb(202, 176, 137);
-            font-family: 'Times New Roman', '等线', Times, serif;
-            width: 100%;
-            height: 98%;
-        }
-
-        /* body::-webkit-scrollbar {
-            display: none;
-        } */
-
-        div,
         h1,
-        h2,
-        h3,
-        h4,
-        h5 {
-            margin: 0px;
+        h3 {
+            margin-top: 0px;
+            font-family: 'Harry P', 'Times New Roman', Times, serif;
         }
 
-        #bodydiv {
-            overflow-x: auto;
-            width: 200%;
+        h1 {
+            font-size: 56px;
+        }
+
+        h3 {
+            font-size: 32px;
+        }
+
+        #pageWrapperDiv {
+            z-index: 1;
+            column-count: 2;
+            column-gap: 80px;
+            padding-left: 40px;
+            padding-right: 40px;
+            padding-top: 40px;
+            overflow-y: hidden;
+            height: 95%;
+        }
+
+        #pageWrapperDiv::-webkit-scrollbar {
+            display: none;
+        }
+
+
+
+        .loadingBox {
+            display: flex;
             height: 100%;
+            z-index: 0;
+            width: 100%;
+            width: 100%;
+            position: absolute;
         }
 
-        #content1,
-        #content2,
-        #content3,
-        #content4,
-        #content6,
-        #content5 {
-            float: left;
-            width: 25%;
+        .loader {
+            margin: auto;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: inline-block;
+            vertical-align: middle;
         }
 
-        .para,
-        .tran {
-            float: left;
-            font-size: 16pt;
-            color: rgb(27, 27, 27);
-            padding: 1%;
-            margin: 0px;
-            width: 98%;
+        /*LOADER-1*/
+
+        .loader-1 .loader-outter {
+            position: absolute;
+            border: 4px solid cornflowerblue;
+            border-left-color: transparent;
+            border-bottom: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            -webkit-animation: loader-1-outter 1s cubic-bezier(.42, .61, .58, .41) infinite;
+            animation: loader-1-outter 1s cubic-bezier(.42, .61, .58, .41) infinite;
+        }
+
+        .loader-1 .loader-inner {
+            position: absolute;
+            border: 4px solid cornflowerblue;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            left: calc(50% - 20px);
+            top: calc(50% - 20px);
+            border-right: 0;
+            border-top-color: transparent;
+            -webkit-animation: loader-1-inner 1s cubic-bezier(.42, .61, .58, .41) infinite;
+            animation: loader-1-inner 1s cubic-bezier(.42, .61, .58, .41) infinite;
+        }
+
+        @keyframes loader-1-outter {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes loader-1-inner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(-360deg);
+                transform: rotate(-360deg);
+            }
         }
     </style>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+    <script>
+        let num2engword = ["ZERO", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE",
+            "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY", "TWENTY-ONE", "TWENTY-TWO",
+            "TWENTY-THREE", "TWENTY-FOUR", "TWENTY-FIVE", "TWENTY-SIX", "TWENTY-SEVEN", "TWENTY-EIGHT", "TWENTY-NINE", "THIRTY",
+            "THIRTY-ONE", "THIRTY-TWO", "THIRTY-THREE", "THIRTY-FOUR", "THIRTY-FIVE", "THIRTY-SIX", "THIRTY-SEVEN", "THIRTY-EIGHT",
+            "THIRTY-NINE", "FORTY", "FORTY-ONE", "FORTY-TWO", "FORTY-THREE", "FORTY-FOUR", "FORTY-FIVE", "FORTY-SIX", "FORTY-SEVEN",
+            "FORTY-EIGHT", "FORTY-NINE", "FIFTY"]
+
+        // todo 词句翻译记录工具
+        let toolBoxTool = {
+            addListener() {
+
+                let pageWrapperDiv = document.getElementById("pageWrapperDiv");
+                pageWrapperDiv.addEventListener("selectstart", (event) => {
+                    console.log("select start");
+                });
+                pageWrapperDiv.addEventListener("selectionchange", (event) => {
+                    console.log("select change");
+                });
+                pageWrapperDiv.addEventListener("mousedown", (event) => {
+                    console.log("mouse down");
+                });
+                pageWrapperDiv.addEventListener("mouseup", (event) => {
+                    console.log("mouse up, selection: " + document.getSelection().toString());
+                    
+                });
+                pageWrapperDiv.addEventListener("dblclick", (event) => {
+                    console.log("double click");
+                });
+                document.addEventListener("selectionchange", (event) => {
+                    console.log("selection change - document");
+                });
+            }
+        };
+
+        // 从数据加载页面
+        let pageLoader = {
+            // 数据加载完成后的监听器
+            onLoadOver: null,
+            // 设置监听器
+            setOnLoadOverListener: listener => { pageLoader.onLoadOver = listener; },
+            // 加载数据
+            loadPage(data) {
+                if (typeof (data) == String) data = JSON.parse(data);
+                let pageWrapperDiv = document.getElementById("pageWrapperDiv");
+                let create = (tag, innerText) => {
+                    let ret = document.createElement(tag);
+                    ret.innerText = innerText;
+                    return ret;
+                };
+                pageWrapperDiv.appendChild(create("h1", data["title"]));
+                let chapterIndex = 1;
+                data["chapters"].forEach(chapter => {
+                    // 新章节换页
+                    if (chapterIndex > 1) {
+                        let tmpH3 = create("h3", "CHAPTER " + num2engword[chapterIndex] + " " + chapter["title"]);
+                        tmpH3.style.webkitColumnBreakBefore = "always";
+                        pageWrapperDiv.appendChild(tmpH3);
+                    } else {
+                        pageWrapperDiv.appendChild(create("h3", "CHAPTER " + num2engword[chapterIndex] + " " + chapter["title"]));
+                    }
+                    chapter["lines"].forEach(line => { pageWrapperDiv.appendChild(create("p", line)); });
+                    chapterIndex++;
+                });
+                if (this.onLoadOver != null) this.onLoadOver();
+            }
+        };
+
+        // 换页
+        let pageTurner = {
+            // 翻页过程不能继续翻页
+            turnStatus: {
+                targetElement: null,
+                targetLeft: 0,
+                update(targetLeft) { this.targetLeft = targetLeft; }
+            },
+            nextPage() {
+                let targetLeft = this.turnStatus.targetLeft + 1920;
+                this.turnStatus.targetElement.scroll({ left: targetLeft, top: 0, behavior: "smooth" });
+                this.turnStatus.update(targetLeft);
+            },
+            lastPage() {
+                let targetLeft = this.turnStatus.targetLeft - 1920;
+                if (targetLeft < 0) targetLeft = 0;
+                this.turnStatus.targetElement.scroll({ left: targetLeft, top: 0, behavior: "smooth" });
+                this.turnStatus.update(targetLeft);
+            },
+            home() {
+                let targetLeft = 0;
+                this.turnStatus.targetElement.scroll({ left: targetLeft, top: 0, behavior: "smooth" });
+                this.turnStatus.update(targetLeft);
+            },
+            end() {
+                let rightMostOffset = this.turnStatus.targetElement.children[this.turnStatus.targetElement.childElementCount - 1].offsetLeft;
+                this.turnStatus.targetElement.scroll({ left: rightMostOffset + 1920, top: 0, behavior: "smooth" });
+            },
+            addListener(targetElement) {
+                this.turnStatus.targetElement = targetElement;
+                let checkNextPage = (event) => { return event.code == "Space" && !event.shiftKey || event.code == "ArrowDown" || event.code == "ArrowRight" || event.code == "PageDown"; };
+                let checkLastPage = (event) => { return event.code == "Space" && event.shiftKey || event.code == "ArrowUp" || event.code == "ArrowLeft" || event.code == "PageUp"; };
+                // 键盘翻页
+                window.addEventListener("keydown", (event) => {
+                    if (checkLastPage(event))
+                        this.lastPage();
+                    else if (checkNextPage(event))
+                        this.nextPage();
+                    else if (event.code == "Home")
+                        this.home();
+                    else if (event.code == "End")
+                        this.end();
+
+                });
+                // 鼠标翻页
+                window.addEventListener("mousewheel", (event) => {
+                    if (event.deltaY > 0) this.nextPage();
+                    else this.lastPage();
+                });
+            }
+        };
+
+        // 加载数据，注册盒子等监听器
+        window.onload = function () {
+            // 显示正在加载动画
+            pageLoader.setOnLoadOverListener(() => { loadingBox.style.display = "none"; });
+            $.getJSON("tmphp3.json", function success(data, textStatus, xhr) { pageLoader.loadPage(data); });
+            pageTurner.addListener(document.getElementById("pageWrapperDiv"));
+            toolBoxTool.addListener();
+        };
+    </script>
 </head>
 
 <body>
-    <div id="tools">
-        <button onclick="hide(true)">hide left</button>
-        <button onclick="hide(false)">hide right</button>
-        <button onclick="insertLine21()">insertLine21</button>
-        <button onclick="moveIt()">edge-like-move</button>
-        <button onclick="nextPage()">nextPage</button>
+
+    <div id="wordbox">
+        <div id="tranbox">
+            garden<br>
+            英 [ˈɡɑːrdn], 美 [ˈɡɑːdn]<br>
+            n. 花园；菜园<br>
+            vt. 栽培花木<br>
+            vi. 从事园艺；在园中种植<br>
+            n. (Garden)人名；(英、意、巴基)加登<br>
+        </div>
+        <hr>
+        <div id="toolbox">
+            <div id="copybox" onclick="wordTranslateTool.copy()">
+                <div>
+                    <img src="imgs/copy.png" title="复制单词释义">复制
+                </div>
+            </div>
+            <div id="recordbox" onclick="wordTranslateTool.record()">
+                <div>
+                    <img src="imgs/record.png" title="记录单词释义">记录
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="bodydiv">
-        <div id="content1"></div>
-        <div id="content2"></div>
-        <div id="content3"></div>
-        <div id="content4"></div>
-        <div id="content5"></div>
-        <div id="content6"></div>
+    <div id="sentencebox">
+        <div id="toolbox">
+            <div id="copybox" onclick="sentenceTool.copy()">
+                <div>
+                    <img src="imgs/copy.png" title="复制所选内容">复制
+                </div>
+            </div>
+            <div id="recordbox" onclick="sentenceTool.record()">
+                <div>
+                    <img src="imgs/record.png" title="记录所选内容">记录
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loadingBox">
+        <div class="loader loader-1">
+            <div class="loader-outer"></div>
+            <div class="loader-inner"></div>
+        </div>
+    </div>
+    <div id="pageWrapperDiv">
     </div>
 </body>
 
