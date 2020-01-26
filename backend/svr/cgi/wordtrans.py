@@ -47,7 +47,7 @@ def queryWord(word: str, conn: connector.MySQLConnection):
     return cursor.fetchone()
 
 
-#  todo halox 文件类型 响应截断最后字符 cgi管理器
+#  todo halox cgi管理器
 if __name__ == "__main__":
     reqPara = parseQuery(os.environ["query"])
     resp = {"status": 0, "data": {}}

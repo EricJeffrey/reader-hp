@@ -134,13 +134,10 @@
             wordTrans2Str: function (wordTrans) {
                 // todo 更好的翻译内容展示
                 wordTrans = JSON.parse(wordTrans);
-                let data = wordTrans["data"];
-                let tmpbr = "\n";
+                let data = wordTrans["data"], tmpbr = "\n";
                 let res = data["word"] + " [" + data["phonetic"] + "]" + tmpbr;
                 let transList = data["translation"].split('\n');
-                transList.forEach(tmp => {
-                    res += tmp + tmpbr;
-                });
+                transList.forEach(tmp => { res += tmp + tmpbr; });
                 return res;
             },
         };
