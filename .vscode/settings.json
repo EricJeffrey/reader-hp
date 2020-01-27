@@ -10,6 +10,10 @@
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
+    "python.formatting.autopep8Args": [
+        "--max-line-length",
+        "120"
+    ],
     "todo-tree.general.tags": [
         "TODO",
         "FIXME",

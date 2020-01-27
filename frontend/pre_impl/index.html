@@ -28,7 +28,7 @@
             background-color: whitesmoke;
             visibility: hidden;
             opacity: 0;
-            font-size: 12pt;
+            font-size: 16px;
             box-shadow: 0px 1px 12px 1px lightgray;
             cursor: default;
             z-index: 2;
@@ -38,7 +38,7 @@
             animation: none;
             visibility: hidden;
             opacity: 0;
-            font-size: 12pt;
+            font-size: 16px;
             width: 12%;
             padding: 1px;
             position: absolute;
@@ -59,6 +59,10 @@
             cursor: text;
             background-color: whitesmoke;
             box-shadow: 0px 1px 12px 1px gray;
+        }
+
+        .tranBoxWord {
+            font-size: 18px;
         }
 
         .toolbox {
@@ -95,6 +99,11 @@
     </style>
     <!-- 主体 -->
     <style>
+        @font-face {
+            font-family: 'hp';
+            src: url("hp.TTF");
+        }
+
         body,
         html {
             height: 100%;
@@ -111,7 +120,7 @@
         h1,
         h3 {
             margin-top: 0px;
-            font-family: 'Harry P', 'Times New Roman', Times, serif;
+            font-family: 'Harry P', hp, 'Times New Roman', Times, serif;
         }
 
         h1 {
@@ -270,18 +279,24 @@
                 record: "http://192.168.186.131:8000/cgi/record",
                 book: "http://192.168.186.131:8000/static/HP3-EN.json"
             },
-            getBook(bookName, onSuccess, onFail) { },
+            getBook(bookUrl, onSuccess, onFail) {
+                $.get(bookUrl, onSuccess).fail(onFail);
+            },
             getWordTrans(word, onSuccess, onFail) {
-                setTimeout(() => {
-                    if (Math.random() > 0.5) onSuccess("This is Temporary Data\n");
-                    else onFail();
-                }, 300);
+                $.get("/cgi/wordtrans?word=" + word.toLowerCase(), onSuccess).fail(onFail);
             },
             recordText(text, onSuccess, onFail) {
-                setTimeout(() => {
-                    if (Math.random() > 0.5) onSuccess();
-                    else onFail();
-                }, 300);
+                let allAlpha = (text = "") => {
+                    for (let i = 0; i < text.length; i++) {
+                        const ch = text[i];
+                        if (!(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z')) return false;
+                    }
+                    return true;
+                };
+                let tmpUrl = "/cgi/sentencerec?sentence=";
+                if (allAlpha(text))
+                    tmpUrl = "/cgi/wordrec?word=", text = text.toLowerCase();
+                $.get(tmpUrl + text, onSuccess).fail(onFail);
             }
         };
 
@@ -308,11 +323,13 @@
             },
             // 在 selectRect 上方向右显示翻译
             wordTrans2Str(wordTrans) {
-                wordTrans = JSON.parse(wordTrans);
-                let data = wordTrans["data"], tmpbr = "\n";
-                let res = data["word"] + " [" + data["phonetic"] + "]" + tmpbr;
+                if (typeof (wordTrans) == "string")
+                    wordTrans = JSON.parse(wordTrans);
+                let data = wordTrans["data"], tmpbr = "<br>";
+                let res = "<span class=\"tranBoxWord\">" + data["word"] + " [" + data["phonetic"] + "]" + "</span>" + tmpbr;
                 let transList = data["translation"].split('\n');
-                transList.forEach(tmp => { res += tmp + tmpbr; });
+                let i = 1;
+                transList.forEach(tmp => { res += tmp + tmpbr; i += 1; });
                 return res;
             },
             showWordBox(translation) {
@@ -419,7 +436,13 @@
                         if (allAlpha(tmpSelectText)) {
                             function work(sid) {
                                 let onSuccess = (data) => {
-                                    if (toolBox.status.selectionID == sid) toolBox.showWordBox(data);
+                                    if (toolBox.status.selectionID == sid) {
+                                        if (typeof (data) == "string") data = JSON.parse(data);
+                                        if (data["status"] != undefined && data["status"] == 1)
+                                            toolBox.showWordBox(toolBox.wordTrans2Str(data));
+                                        else
+                                            toolBox.showWordBox("failed to load translation");
+                                    }
                                 };
                                 let onFail = () => {
                                     if (toolBox.status.selectionID == sid)
@@ -493,7 +516,7 @@
             setOnLoadOverListener: listener => { pageLoader.onLoadOver = listener; },
             // 加载数据
             loadPage(data) {
-                if (typeof (data) == String) data = JSON.parse(data);
+                if (typeof (data) == "string") data = JSON.parse(data);
                 let pageWrapperDiv = document.getElementById("pageWrapperDiv");
                 let create = (tag, innerText) => {
                     let ret = document.createElement(tag);
@@ -574,12 +597,19 @@
         window.onload = function () {
             // 显示正在加载动画
             pageLoader.setOnLoadOverListener(() => { loadingBox.style.display = "none"; });
-            $.getJSON("tmphp3.json", function success(data, textStatus, xhr) { pageLoader.loadPage(data); });
-            pageTurner.addListener(document.getElementById("pageWrapperDiv"));
-            toolBox.addListener();
+            dataFetcher.getBook(
+                "tmphp3.json",
+                (data, status, xhr) => {
+                    pageLoader.loadPage(data);
+                    pageTurner.addListener(document.getElementById("pageWrapperDiv"));
+                    toolBox.addListener();
+                },
+                () => { alert("load book failed"); }
+            );
         };
     </script>
 </head>
+<!-- todo 文件过长？长度不必配 -->
 
 <body>
     <input id="copyInput" type="text" style="position: absolute;opacity: 0;">
