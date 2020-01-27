@@ -293,13 +293,15 @@
                 selectionID: 0,
                 // 相对位置, 可以通过 pageWrapperDiv.scrollLeft 偏移获得
                 selectRect: null,
-                mousePos: { x: 0, y: 0 },
                 selectText: "",
-                set(srect, mpos, text) {
+                selectTarget: null,
+                mousePos: { x: 0, y: 0 },
+                set(srect, mpos, text, starget) {
                     this.selectionID += 1;
                     this.selectRect = srect;
                     this.mousePos = mpos;
                     this.selectText = text;
+                    this.selectTarget = starget;
                 },
                 setWordBoxShowing(showing) { this.wordBoxShowing = showing; },
                 setSentenceBoxShowing(showing) { this.sentenceBoxShowing = showing; }
@@ -412,7 +414,7 @@
                     if (tmpSelectText.length > 0) {
                         let rect = tmpSelection.getRangeAt(0).getBoundingClientRect();
                         // 记录位置
-                        toolBox.status.set(rect, { x: event.x, y: event.y }, tmpSelectText);
+                        toolBox.status.set(rect, { x: event.x, y: event.y }, tmpSelectText, event.target);
                         // 单词
                         if (allAlpha(tmpSelectText)) {
                             function work(sid) {
@@ -463,8 +465,10 @@
                 notifyBox.addEventListener("animationend", (event) => { notifyBox.style.animation = "none"; });
             },
             copy(data) {
-                // todo 复制
-                console.log("copy: " + data);
+                let copyInput = document.getElementById("copyInput");
+                copyInput.value = this.status.selectText;
+                copyInput.select();
+                document.execCommand("copy", false);
             },
             record(data) {
                 function onSuccess() {
@@ -578,6 +582,7 @@
 </head>
 
 <body>
+    <input id="copyInput" type="text" style="position: absolute;opacity: 0;">
     <div id="notifyBox">
         <div id="notifyText">
             记录成功
