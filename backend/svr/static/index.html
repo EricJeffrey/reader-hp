@@ -40,10 +40,11 @@
             opacity: 0;
             font-size: 16px;
             width: 12%;
-            padding: 1px;
+            padding: 2px;
             position: absolute;
             z-index: 2;
             cursor: default;
+            line-height: 22px;
         }
 
         #wordbox hr {
@@ -441,12 +442,11 @@
                                         if (data["status"] != undefined && data["status"] == 1)
                                             toolBox.showWordBox(toolBox.wordTrans2Str(data));
                                         else
-                                            toolBox.showWordBox("failed to load translation");
+                                            toolBox.showWordBox("未找到释义");
                                     }
                                 };
                                 let onFail = () => {
-                                    if (toolBox.status.selectionID == sid)
-                                        toolBox.showWordBox("failed to load translation");
+                                    if (toolBox.status.selectionID == sid) toolBox.showWordBox("网络错误");
                                 };
                                 dataFetcher.getWordTrans(toolBox.status.selectText, onSuccess, onFail);
                             };
@@ -585,10 +585,16 @@
                         this.end();
 
                 });
-                // 鼠标翻页
+                // 鼠标滚轮翻页
                 window.addEventListener("mousewheel", (event) => {
                     if (event.deltaY > 0) this.nextPage();
                     else this.lastPage();
+                });
+                // 鼠标左右键
+                let validMouseClickWidth = 250;
+                document.getElementById("pageWrapperDiv").addEventListener("click", (event) => {
+                    if (event.x < validMouseClickWidth) { pageTurner.lastPage(); }
+                    else if (event.x > window.innerWidth - validMouseClickWidth) { pageTurner.nextPage(); }
                 });
             }
         };
@@ -609,7 +615,6 @@
         };
     </script>
 </head>
-<!-- todo 文件过长？长度不必配 -->
 
 <body>
     <input id="copyInput" type="text" style="position: absolute;opacity: 0;">
@@ -620,12 +625,6 @@
     </div>
     <div id="wordbox">
         <div id="tranbox">
-            garden<br>
-            英 [ˈɡɑːrdn], 美 [ˈɡɑːdn]<br>
-            n. 花园；菜园<br>
-            vt. 栽培花木<br>
-            vi. 从事园艺；在园中种植<br>
-            n. (Garden)人名；(英、意、巴基)加登<br>
         </div>
         <hr>
         <div class="toolbox">
