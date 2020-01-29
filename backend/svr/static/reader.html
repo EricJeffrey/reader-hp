@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" /> -->
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
     <title>HPReader</title>
     <!-- 翻译工具盒子 -->
     <style>
@@ -135,12 +135,12 @@
         #pageWrapperDiv {
             z-index: 1;
             column-count: 2;
-            column-gap: 80px;
-            padding-left: 40px;
-            padding-right: 40px;
+            column-gap: 120px;
+            padding-left: 60px;
+            padding-right: 60px;
             padding-top: 40px;
             overflow-y: hidden;
-            height: 95%;
+            height: 92%;
             outline: none;
         }
 
@@ -168,7 +168,7 @@
             vertical-align: middle;
         }
 
-        .loaderText{
+        .loaderText {
             width: fit-content;
             margin: auto;
         }
@@ -460,10 +460,6 @@
             addListener() {
                 // 显示翻译与工具栏
                 pageWrapperDiv.addEventListener("mouseup", this.mouseUpListener);
-                pageWrapperDiv.addEventListener("mousedown", (event) => {
-                    if (toolBox.status.wordBoxShowing) toolBox.hideWordBox();
-                    if (toolBox.status.sentenceBoxShowing) toolBox.hideSentenceBox();
-                });
                 // 复制 记录
                 let copyboxes = document.getElementsByClassName("copybox");
                 for (let i = 0; i < copyboxes.length; i++) {
@@ -492,20 +488,22 @@
                 copyInput.value = this.status.selectText;
                 copyInput.select();
                 document.execCommand("copy", false);
+                toolBox.showNotifyBox("复制成功");
+            },
+            showNotifyBox(innerText) {
+                let notifyBox = document.getElementById("notifyBox");
+                notifyBox.children[0].innerText = innerText;
+                notifyBox.style.animation = "notifyBoxAnim 2.5s forwards cubic-bezier(0.77, 0, 0.175, 1)";
             },
             record(data) {
-                function onSuccess() {
-                    let notifyBox = document.getElementById("notifyBox");
-                    notifyBox.children[0].innerText = "记录成功";
-                    notifyBox.style.animation = "notifyBoxAnim 2.5s forwards cubic-bezier(0.77, 0, 0.175, 1)";
-                };
-                function onFail() {
-                    let notifyBox = document.getElementById("notifyBox");
-                    notifyBox.children[0].innerText = "记录失败";
-                    notifyBox.style.animation = "notifyBoxAnim 2.5s forwards cubic-bezier(0.77, 0, 0.175, 1)";
-                };
+                function onSuccess() { toolBox.showNotifyBox("记录成功"); };
+                function onFail() { toolBox.showNotifyBox("记录失败"); };
                 dataFetcher.recordText(data, onSuccess, onFail);
             },
+            hideAllBox() {
+                if (toolBox.status.wordBoxShowing) toolBox.hideWordBox();
+                if (toolBox.status.sentenceBoxShowing) toolBox.hideSentenceBox();
+            }
         };
 
         // 从数据加载页面
@@ -550,32 +548,44 @@
                 update(targetLeft) { this.targetLeft = targetLeft; }
             },
             nextPage() {
+                toolBox.hideAllBox();
                 let targetLeft = this.turnStatus.targetLeft + 1920;
-                console.log("nextPage, targetLeft: " + targetLeft + ", targetElement: " + this.turnStatus.targetElement);
                 this.turnStatus.targetElement.scroll({ left: targetLeft, top: 0, behavior: "smooth" });
-                console.log("nextPage, targetLeft: " + targetLeft + ", targetElement: " + this.turnStatus.targetElement);
                 this.turnStatus.update(targetLeft);
             },
             lastPage() {
+                toolBox.hideAllBox();
                 let targetLeft = this.turnStatus.targetLeft - 1920;
                 if (targetLeft < 0) targetLeft = 0;
                 this.turnStatus.targetElement.scroll({ left: targetLeft, top: 0, behavior: "smooth" });
                 this.turnStatus.update(targetLeft);
             },
             home() {
+                toolBox.hideAllBox();
                 let targetLeft = 0;
                 this.turnStatus.targetElement.scroll({ left: targetLeft, top: 0, behavior: "smooth" });
                 this.turnStatus.update(targetLeft);
             },
             end() {
+                toolBox.hideAllBox();
                 let rightMostOffset = this.turnStatus.targetElement.children[this.turnStatus.targetElement.childElementCount - 1].offsetLeft;
                 this.turnStatus.targetElement.scroll({ left: rightMostOffset + 1920, top: 0, behavior: "smooth" });
             },
             addListener(targetElement) {
                 this.turnStatus.targetElement = targetElement;
 
-                let checkNextPage = (event) => { return (event.code == "Space" && !event.shiftKey) || event.code == "ArrowDown" || (event.code == "ArrowRight" && !event.altKey) || event.code == "PageDown"; };
-                let checkLastPage = (event) => { return (event.code == "Space" && event.shiftKey) || event.code == "ArrowUp" || (event.code == "ArrowLeft" && !event.altKey) || event.code == "PageUp"; };
+                let checkNextPage = (event) => {
+                    return (event.code == "Space" && !event.shiftKey)
+                        || event.code == "ArrowDown"
+                        || (event.code == "ArrowRight" && !event.altKey)
+                        || event.code == "PageDown";
+                };
+                let checkLastPage = (event) => {
+                    return (event.code == "Space" && event.shiftKey)
+                        || event.code == "ArrowUp"
+                        || (event.code == "ArrowLeft" && !event.altKey)
+                        || event.code == "PageUp";
+                };
                 // 键盘翻页
                 targetElement.focus();
                 let pageWrapperDiv = targetElement;
@@ -598,8 +608,8 @@
                     else this.lastPage();
                 });
                 // 鼠标左右键
-                let validMouseClickWidth = 250;
-                pageWrapperDiv.addEventListener("click", (event) => {
+                let validMouseClickWidth = 60;
+                pageWrapperDiv.addEventListener("mouseup", (event) => {
                     if (event.x < validMouseClickWidth) { pageTurner.lastPage(); }
                     else if (event.x > window.innerWidth - validMouseClickWidth) { pageTurner.nextPage(); }
                 });
@@ -629,7 +639,7 @@
             // 显示正在加载动画
             pageLoader.setOnLoadOverListener(() => { loadingBox.style.display = "none"; });
             dataFetcher.getBook(
-                bookName + ".json",
+                "books/" + bookName + ".json",
                 (data, status, xhr) => {
                     pageLoader.loadPage(data);
                     pageTurner.addListener(document.getElementById("pageWrapperDiv"));
