@@ -1,666 +1,103 @@
 <!DOCTYPE html>
-<html lang="cn">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" /> -->
-    <title>HPReader</title>
-    <!-- 翻译工具盒子 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Reader</title>
     <style>
-        @keyframes boxanimation_show {
-            0% {
-                opacity: 0;
-            }
-
-            30% {
-                opacity: 0.75;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-
-        #sentencebox {
-            animation: none;
-            width: 8%;
-            position: absolute;
+        body {
             background-color: whitesmoke;
-            visibility: hidden;
-            opacity: 0;
-            font-size: 16px;
-            box-shadow: 0px 1px 12px 1px lightgray;
-            cursor: default;
-            z-index: 2;
+            font-size: 20px;
+            font-family: 'Segoe UI', '等线', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
 
-        #wordbox {
-            animation: none;
-            visibility: hidden;
-            opacity: 0;
-            font-size: 16px;
-            width: 12%;
-            padding: 2px;
-            position: absolute;
-            z-index: 2;
-            cursor: default;
-            line-height: 22px;
-        }
-
-        #wordbox hr {
-            border-color: rgba(82, 82, 82, 0.3);
-            border-width: 0.5px;
-            border-style: solid;
-            margin: 5px 5px 0px 5px;
-            visibility: hidden;
-        }
-
-        #tranbox {
-            padding: 5px;
-            cursor: text;
-            background-color: whitesmoke;
-            box-shadow: 0px 1px 12px 1px gray;
-        }
-
-        .tranBoxWord {
-            font-size: 18px;
-        }
-
-        .toolbox {
-            margin: 0px;
-            display: flex;
-            background-color: whitesmoke;
-            box-shadow: 0px 0px 12px 1px gray;
-        }
-
-        .toolbox img {
-            height: 16px;
-            margin-right: 5px;
-        }
-
-        .copybox,
-        .recordbox {
-            float: left;
-            margin: auto;
+        #container {
             width: 50%;
-            padding: 6px;
-        }
-
-        .copybox:hover,
-        .recordbox:hover {
-            background-color: rgb(212, 212, 212);
-        }
-
-        .copybox div,
-        .recordbox div {
-            display: flex;
-            align-items: center;
-            width: fit-content;
-        }
-    </style>
-    <!-- 主体 -->
-    <style>
-        @font-face {
-            font-family: 'hp';
-            src: url("hp.TTF");
-        }
-
-        body,
-        html {
-            height: 100%;
-            width: 100%;
-            overflow-y: hidden;
-            margin: 0px;
-            padding: 0px;
-            background-color: whitesmoke;
-            font-family: 'Times New Roman', '等线', Times, serif;
-            font-size: 21px;
-            text-align: justify;
-        }
-
-        h1,
-        h3 {
-            margin-top: 0px;
-            font-family: 'Harry P', hp, 'Times New Roman', Times, serif;
-        }
-
-        h1 {
-            font-size: 56px;
-        }
-
-        h3 {
-            font-size: 32px;
-        }
-
-        #pageWrapperDiv {
-            z-index: 1;
-            column-count: 2;
-            column-gap: 80px;
-            padding-left: 40px;
-            padding-right: 40px;
-            padding-top: 40px;
-            overflow-y: hidden;
-            height: 95%;
-        }
-
-        #pageWrapperDiv::-webkit-scrollbar {
-            display: none;
-        }
-    </style>
-    <!-- 加载动画 -->
-    <style>
-        .loadingBox {
-            display: flex;
-            height: 100%;
-            z-index: 0;
-            width: 100%;
-            width: 100%;
-            position: absolute;
-        }
-
-        .loader {
             margin: auto;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: inline-block;
-            vertical-align: middle;
         }
 
-        /*LOADER-1*/
-
-        .loader-1 .loader-outter {
-            position: absolute;
-            border: 4px solid cornflowerblue;
-            border-left-color: transparent;
-            border-bottom: 1;
-            width: 60px;
-            height: 60px;
-            left: calc(50% - 30px);
-            top: calc(50% - 30px);
-            border-radius: 50%;
-            -webkit-animation: loader-1-outter 1s cubic-bezier(.42, .61, .58, .41) infinite;
-            animation: loader-1-outter 1s cubic-bezier(.42, .61, .58, .41) infinite;
+        #container ul {
+            list-style: none;
+            padding-left: 0px;
+            border: rgba(22, 22, 22, 0.3) solid 1px;
         }
 
-        .loader-1 .loader-inner {
-            position: absolute;
-            border: 4px solid cornflowerblue;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            left: calc(50% - 20px);
-            top: calc(50% - 20px);
-            border-right: 1;
-            border-top-color: transparent;
-            -webkit-animation: loader-1-inner 1s cubic-bezier(.42, .61, .58, .41) infinite;
-            animation: loader-1-inner 1s cubic-bezier(.42, .61, .58, .41) infinite;
-        }
-
-        @keyframes loader-1-outter {
-            0% {
-                -webkit-transform: rotate(0deg);
-                transform: rotate(0deg);
-            }
-
-            100% {
-                -webkit-transform: rotate(360deg);
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes loader-1-inner {
-            0% {
-                -webkit-transform: rotate(0deg);
-                transform: rotate(0deg);
-            }
-
-            100% {
-                -webkit-transform: rotate(-360deg);
-                transform: rotate(-360deg);
-            }
-        }
-    </style>
-    <!-- 通知 -->
-    <style>
-        @keyframes notifyBoxAnim {
-            0% {
-                opacity: 0;
-                bottom: 100%;
-            }
-
-            25% {
-                opacity: 1;
-                bottom: 95%;
-            }
-
-            75% {
-                opacity: 1;
-                bottom: 95%;
-            }
-
-            100% {
-                opacity: 0;
-                bottom: 100%;
-            }
-        }
-
-        #notifyBox {
-            width: 100%;
-            position: absolute;
-            opacity: 0;
-        }
-
-        #notifyText {
-            padding: 8px 30px 8px 30px;
-            margin: auto;
-            width: fit-content;
-            height: fit-content;
-            box-shadow: gray 0px 0px 12px 1px;
-            background-color: whitesmoke;
+        #container ul li {
             display: flex;
-            text-align: center;
-            font-size: 16px;
+            padding: 5px;
+            border-top: rgba(22, 22, 22, 0.3) solid 1px;
+        }
+
+        #container ul .first {
+            border-top: none;
+        }
+
+        #container ul li:hover {
+            background-color: rgba(22, 22, 22, 0.1);
+        }
+
+        #container a {
+            text-decoration: none;
+            color: #0366d6;
+        }
+
+        #container ul li span {
+            flex: 1;
+            flex-basis: auto;
         }
     </style>
-
-    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
     <script>
-        let num2engword = ["ZERO", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE",
-            "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY", "TWENTY-ONE", "TWENTY-TWO",
-            "TWENTY-THREE", "TWENTY-FOUR", "TWENTY-FIVE", "TWENTY-SIX", "TWENTY-SEVEN", "TWENTY-EIGHT", "TWENTY-NINE", "THIRTY",
-            "THIRTY-ONE", "THIRTY-TWO", "THIRTY-THREE", "THIRTY-FOUR", "THIRTY-FIVE", "THIRTY-SIX", "THIRTY-SEVEN", "THIRTY-EIGHT",
-            "THIRTY-NINE", "FORTY", "FORTY-ONE", "FORTY-TWO", "FORTY-THREE", "FORTY-FOUR", "FORTY-FIVE", "FORTY-SIX", "FORTY-SEVEN",
-            "FORTY-EIGHT", "FORTY-NINE", "FIFTY"]
-
-        // 从服务器获取数据
-        let dataFetcher = {
-            urls: {
-                wordTrans: "http://192.168.186.131:8000/cgi/wordtrans",
-                record: "http://192.168.186.131:8000/cgi/record",
-                book: "http://192.168.186.131:8000/static/HP3-EN.json"
-            },
-            getBook(bookUrl, onSuccess, onFail) {
-                $.get(bookUrl, onSuccess).fail(onFail);
-            },
-            getWordTrans(word, onSuccess, onFail) {
-                $.get("/cgi/wordtrans?word=" + word.toLowerCase(), onSuccess).fail(onFail);
-            },
-            recordText(text, onSuccess, onFail) {
-                let allAlpha = (text = "") => {
-                    for (let i = 0; i < text.length; i++) {
-                        const ch = text[i];
-                        if (!(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z')) return false;
-                    }
-                    return true;
-                };
-                let tmpUrl = "/cgi/sentencerec?sentence=";
-                if (allAlpha(text))
-                    tmpUrl = "/cgi/wordrec?word=", text = text.toLowerCase();
-                $.get(tmpUrl + text, onSuccess).fail(onFail);
+        // 无格式后缀的文件名 以及 书籍名称
+        let bookFileNameList = [
+            "HP1-EN",
+            "HP2-EN",
+            "HP3-EN",
+            "HP4-EN",
+            "HP5-EN",
+            "HP6-EN",
+            "HP7-EN"
+        ];
+        let bookTitleList = [
+            "Harry Potter and the Sorcerer's Stone",
+            'Harry Potter and The Chamber Of Secrets',
+            'Harry Potter and the Prisoner of Azkaban',
+            'Harry Potter and the Goblet of Fire',
+            'Harry Potter and the Order of the Phoenix',
+            'Harry Potter and The Half-Blood Prince',
+            'Harry Potter and the Deathly Hallows'];
+        // 生成书籍列表
+        function generateBookList() {
+            let bookListUl = document.getElementById("bookListUl");
+            for (let i = 0; i < bookFileNameList.length; i++) {
+                const bookFileName = bookFileNameList[i];
+                const bookTitle = bookTitleList[i];
+                let a = document.createElement("a");
+                a.href = "./reader.html?bookName=" + bookFileName;
+                a.target = "_blank";
+                a.innerHTML = bookTitle;
+                let tmpLi = document.createElement("li");
+                if (i == 0) tmpLi.className = "first";
+                tmpLi.appendChild(a);
+                bookListUl.appendChild(tmpLi);
             }
-        };
+        }
 
-        // 词句翻译记录工具
-        let toolBox = {
-            status: {
-                wordBoxShowing: false,
-                sentenceBoxShowing: false,
-                selectionID: 0,
-                // 相对位置, 可以通过 pageWrapperDiv.scrollLeft 偏移获得
-                selectRect: null,
-                selectText: "",
-                selectTarget: null,
-                mousePos: { x: 0, y: 0 },
-                set(srect, mpos, text, starget) {
-                    this.selectionID += 1;
-                    this.selectRect = srect;
-                    this.mousePos = mpos;
-                    this.selectText = text;
-                    this.selectTarget = starget;
-                },
-                setWordBoxShowing(showing) { this.wordBoxShowing = showing; },
-                setSentenceBoxShowing(showing) { this.sentenceBoxShowing = showing; }
-            },
-            // 在 selectRect 上方向右显示翻译
-            wordTrans2Str(wordTrans) {
-                if (typeof (wordTrans) == "string")
-                    wordTrans = JSON.parse(wordTrans);
-                let data = wordTrans["data"], tmpbr = "<br>";
-                let res = "<span class=\"tranBoxWord\">" + data["word"] + " [" + data["phonetic"] + "]" + "</span>" + tmpbr;
-                let transList = data["translation"].split('\n');
-                let i = 1;
-                transList.forEach(tmp => { res += tmp + tmpbr; i += 1; });
-                return res;
-            },
-            showWordBox(translation) {
-                document.getElementById("tranbox").innerHTML = translation;
-                let tmpRect = this.status.selectRect;
-                let wordBox = document.getElementById("wordbox");
-                wordBox.style.top = wordBox.style.bottom = null;
-                wordBox.style.left = wordBox.style.right = null;
-                wordBox.style.bottom = (window.innerHeight - tmpRect.y) + "px";
-                wordBox.style.left = (tmpRect.x) + "px";
-                // 调整box位置，默认 上方向右，必要时调整为 下方向左
-                let stylebox = getComputedStyle(wordBox);
-                // 太高
-                let styboxHeightNum = Number(stylebox.height.substring(0, stylebox.height.length - 2));
-                if (tmpRect.top <= styboxHeightNum) {
-                    wordBox.style.bottom = null;
-                    wordBox.style.top = (tmpRect.top + tmpRect.height) + "px";
-                }
-                stylebox = getComputedStyle(wordBox);
-                // wordspan 太靠右
-                let styboxWidthNum = Number(stylebox.width.substring(0, stylebox.width.length - 2));
-                if (window.innerWidth - tmpRect.x <= styboxWidthNum) {
-                    wordBox.style.left = (tmpRect.x + tmpRect.width - styboxWidthNum) + "px";
-                }
-                wordBox.style.visibility = "visible";
-                wordBox.style.animation = "boxanimation_show 0.25s";
-                wordBox.style.opacity = "1";
-                this.status.setWordBoxShowing(true);
-            },
-            hideWordBox() {
-                let wordBox = document.getElementById("wordbox");
-                wordBox.style.visibility = "hidden";
-                wordBox.style.opacity = "0";
-                wordBox.style.animation = "none";
-                this.status.setWordBoxShowing(false);
-            },
-            showSentenceBox(pos) {
-                let tmpMousePos = this.status.mousePos;
-                let sentencedBox = document.getElementById("sentencebox");
-                sentencedBox.style.top = sentencedBox.style.bottom = null;
-                sentencedBox.style.left = sentencedBox.style.right = null;
-                sentencedBox.style.bottom = (window.innerHeight - tmpMousePos.y + 10) + "px";
-                sentencedBox.style.left = (tmpMousePos.x) + "px";
-                // 调整box位置，默认 上方向右，必要时调整为 下方向左
-                let stylebox = getComputedStyle(sentencedBox);
-                // 太高
-                if (tmpMousePos.y <= Number(stylebox.height.substring(0, stylebox.height.length - 2))) {
-                    sentencedBox.style.bottom = null;
-                    sentencedBox.style.top = (tmpMousePos.y) + "px";
-                }
-                stylebox = getComputedStyle(sentencedBox);
-                // wordspan 太靠右
-                let styboxWidthNum = Number(stylebox.width.substring(0, stylebox.width.length - 2));
-                if (window.innerWidth - tmpMousePos.x <= styboxWidthNum) {
-                    sentencedBox.style.left = (tmpMousePos.x - styboxWidthNum) + "px";
-                }
-                sentencedBox.style.visibility = "visible";
-                sentencedBox.style.animation = "boxanimation_show 0.2s";
-                sentencedBox.style.opacity = "1";
-                this.status.setSentenceBoxShowing(true);
-            },
-            hideSentenceBox() {
-                let sentenceBox = document.getElementById("sentencebox");
-                sentenceBox.style.visibility = "hidden";
-                sentenceBox.style.opacity = "0";
-                sentenceBox.style.animation = "none";
-                this.status.setSentenceBoxShowing(false);
-
-            },
-            /*
-            -----
-            pageWrapperDiv上
-            左键up - 正在显示盒子 - 关闭盒子 - 结束
-            左键up - 选择空 - 忽略 - 结束
-            左键up - 选择非空 - 记录选择位置、鼠标位置、内容 - 设置当前选择id - 选择类型为单词 - 记录选择id1 - 请求翻译 - 成功 - 选择id未改变 - 显示翻译盒子
-                |----------------------------------------------------- 选择类型为句子 - 鼠标位置显示工具
-
-            左键down - 在显示盒子 - 关闭
-            工具盒子
-            复制 - 系统API
-            记录 - 请求服务器记录 - 成功 - 显示通知
-            -----
-            */
-            mouseUpListener(event) {
-                // 盒子显示，隐藏
-                if (toolBox.status.wordBoxShowing) toolBox.hideWordBox();
-                else if (toolBox.status.sentenceBoxShowing) toolBox.hideSentenceBox();
-                else {
-                    // 盒子未显示
-                    let tmpSelection = document.getSelection();
-                    let tmpSelectText = tmpSelection.toString().trim();
-                    let allAlpha = (text = "") => {
-                        for (let i = 0; i < text.length; i++) {
-                            const ch = text[i];
-                            if (!(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z')) return false;
-                        }
-                        return true;
-                    };
-                    if (tmpSelectText.length > 0) {
-                        let rect = tmpSelection.getRangeAt(0).getBoundingClientRect();
-                        // 记录位置
-                        toolBox.status.set(rect, { x: event.x, y: event.y }, tmpSelectText, event.target);
-                        // 单词
-                        if (allAlpha(tmpSelectText)) {
-                            function work(sid) {
-                                let onSuccess = (data) => {
-                                    if (toolBox.status.selectionID == sid) {
-                                        if (typeof (data) == "string") data = JSON.parse(data);
-                                        if (data["status"] != undefined && data["status"] == 1)
-                                            toolBox.showWordBox(toolBox.wordTrans2Str(data));
-                                        else
-                                            toolBox.showWordBox("未找到释义");
-                                    }
-                                };
-                                let onFail = () => {
-                                    if (toolBox.status.selectionID == sid) toolBox.showWordBox("网络错误");
-                                };
-                                dataFetcher.getWordTrans(toolBox.status.selectText, onSuccess, onFail);
-                            };
-                            work(toolBox.status.selectionID);
-                        }
-                        // 句子
-                        else toolBox.showSentenceBox();
-                    }
-                }
-            },
-            addListener() {
-                // 显示翻译与工具栏
-                pageWrapperDiv.addEventListener("mouseup", this.mouseUpListener);
-                pageWrapperDiv.addEventListener("mousedown", (event) => {
-                    if (toolBox.status.wordBoxShowing) toolBox.hideWordBox();
-                    if (toolBox.status.sentenceBoxShowing) toolBox.hideSentenceBox();
-                });
-                // 复制 记录
-                let copyboxes = document.getElementsByClassName("copybox");
-                for (let i = 0; i < copyboxes.length; i++) {
-                    const copybox = copyboxes[i];
-                    copybox.addEventListener("click", (event) => {
-                        toolBox.copy(toolBox.status.selectText);
-                        toolBox.hideWordBox();
-                        toolBox.hideSentenceBox();
-                    });
-                }
-                let recordboxes = document.getElementsByClassName("recordbox");
-                for (let i = 0; i < recordboxes.length; i++) {
-                    const recordbox = recordboxes[i];
-                    recordbox.addEventListener("click", (event) => {
-                        toolBox.record(toolBox.status.selectText);
-                        toolBox.hideWordBox();
-                        toolBox.hideSentenceBox();
-                    });
-                }
-                // 通知控件
-                let notifyBox = document.getElementById("notifyBox");
-                notifyBox.addEventListener("animationend", (event) => { notifyBox.style.animation = "none"; });
-            },
-            copy(data) {
-                let copyInput = document.getElementById("copyInput");
-                copyInput.value = this.status.selectText;
-                copyInput.select();
-                document.execCommand("copy", false);
-            },
-            record(data) {
-                function onSuccess() {
-                    let notifyBox = document.getElementById("notifyBox");
-                    notifyBox.children[0].innerText = "记录成功";
-                    notifyBox.style.animation = "notifyBoxAnim 2.5s forwards cubic-bezier(0.77, 0, 0.175, 1)";
-                };
-                function onFail() {
-                    let notifyBox = document.getElementById("notifyBox");
-                    notifyBox.children[0].innerText = "记录失败";
-                    notifyBox.style.animation = "notifyBoxAnim 2.5s forwards cubic-bezier(0.77, 0, 0.175, 1)";
-                };
-                dataFetcher.recordText(data, onSuccess, onFail);
-            },
-        };
-
-        // 从数据加载页面
-        let pageLoader = {
-            // 数据加载完成后的监听器
-            onLoadOver: null,
-            // 设置监听器
-            setOnLoadOverListener: listener => { pageLoader.onLoadOver = listener; },
-            // 加载数据
-            loadPage(data) {
-                if (typeof (data) == "string") data = JSON.parse(data);
-                let pageWrapperDiv = document.getElementById("pageWrapperDiv");
-                let create = (tag, innerText) => {
-                    let ret = document.createElement(tag);
-                    ret.innerText = innerText;
-                    return ret;
-                };
-                pageWrapperDiv.appendChild(create("h1", data["title"]));
-                let chapterIndex = 1;
-                data["chapters"].forEach(chapter => {
-                    // 新章节换页
-                    if (chapterIndex > 1) {
-                        let tmpH3 = create("h3", "CHAPTER " + num2engword[chapterIndex] + " " + chapter["title"]);
-                        tmpH3.style.webkitColumnBreakBefore = "always";
-                        pageWrapperDiv.appendChild(tmpH3);
-                    } else {
-                        pageWrapperDiv.appendChild(create("h3", "CHAPTER " + num2engword[chapterIndex] + " " + chapter["title"]));
-                    }
-                    chapter["lines"].forEach(line => { pageWrapperDiv.appendChild(create("p", line)); });
-                    chapterIndex++;
-                });
-                if (this.onLoadOver != null) this.onLoadOver();
-            }
-        };
-
-        // 换页
-        let pageTurner = {
-            // 翻页过程不能继续翻页
-            turnStatus: {
-                targetElement: null,
-                targetLeft: 0,
-                update(targetLeft) { this.targetLeft = targetLeft; }
-            },
-            nextPage() {
-                let targetLeft = this.turnStatus.targetLeft + 1920;
-                this.turnStatus.targetElement.scroll({ left: targetLeft, top: 0, behavior: "smooth" });
-                this.turnStatus.update(targetLeft);
-            },
-            lastPage() {
-                let targetLeft = this.turnStatus.targetLeft - 1920;
-                if (targetLeft < 0) targetLeft = 0;
-                this.turnStatus.targetElement.scroll({ left: targetLeft, top: 0, behavior: "smooth" });
-                this.turnStatus.update(targetLeft);
-            },
-            home() {
-                let targetLeft = 0;
-                this.turnStatus.targetElement.scroll({ left: targetLeft, top: 0, behavior: "smooth" });
-                this.turnStatus.update(targetLeft);
-            },
-            end() {
-                let rightMostOffset = this.turnStatus.targetElement.children[this.turnStatus.targetElement.childElementCount - 1].offsetLeft;
-                this.turnStatus.targetElement.scroll({ left: rightMostOffset + 1920, top: 0, behavior: "smooth" });
-            },
-            addListener(targetElement) {
-                this.turnStatus.targetElement = targetElement;
-                let checkNextPage = (event) => { return (event.code == "Space" && !event.shiftKey) || event.code == "ArrowDown" || event.code == "ArrowRight" || event.code == "PageDown"; };
-                let checkLastPage = (event) => { return (event.code == "Space" && event.shiftKey) || event.code == "ArrowUp" || event.code == "ArrowLeft" || event.code == "PageUp"; };
-                // 键盘翻页
-                window.addEventListener("keydown", (event) => {
-                    if (checkLastPage(event))
-                        this.lastPage();
-                    else if (checkNextPage(event))
-                        this.nextPage();
-                    else if (event.code == "Home")
-                        this.home();
-                    else if (event.code == "End")
-                        this.end();
-
-                });
-                // 鼠标滚轮翻页
-                window.addEventListener("mousewheel", (event) => {
-                    if (event.deltaY > 0) this.nextPage();
-                    else this.lastPage();
-                });
-                // 鼠标左右键
-                let validMouseClickWidth = 250;
-                document.getElementById("pageWrapperDiv").addEventListener("click", (event) => {
-                    if (event.x < validMouseClickWidth) { pageTurner.lastPage(); }
-                    else if (event.x > window.innerWidth - validMouseClickWidth) { pageTurner.nextPage(); }
-                });
-            }
-        };
-
-        // 加载数据，注册盒子等监听器
         window.onload = function () {
-            // 显示正在加载动画
-            pageLoader.setOnLoadOverListener(() => { loadingBox.style.display = "none"; });
-            dataFetcher.getBook(
-                "tmphp3.json",
-                (data, status, xhr) => {
-                    pageLoader.loadPage(data);
-                    pageTurner.addListener(document.getElementById("pageWrapperDiv"));
-                    toolBox.addListener();
-                },
-                () => { alert("load book failed"); }
-            );
+            generateBookList();
         };
     </script>
 </head>
 
 <body>
-    <input id="copyInput" type="text" style="position: absolute;opacity: 0;">
-    <div id="notifyBox">
-        <div id="notifyText">
-            记录成功
-        </div>
-    </div>
-    <div id="wordbox">
-        <div id="tranbox">
-        </div>
-        <hr>
-        <div class="toolbox">
-            <div class="copybox">
-                <div>
-                    <img src="imgs/copy.png" title="复制单词释义">复制
-                </div>
-            </div>
-            <div class="recordbox">
-                <div>
-                    <img src="imgs/record.png" title="记录单词释义">记录
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="sentencebox">
-        <div class="toolbox">
-            <div class="copybox">
-                <div>
-                    <img src="imgs/copy.png" title="复制所选内容">复制
-                </div>
-            </div>
-            <div class="recordbox">
-                <div>
-                    <img src="imgs/record.png" title="记录所选内容">记录
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="loadingBox">
-        <div class="loader loader-1">
-            <div class="loader-outter"></div>
-            <div class="loader-inner"></div>
-        </div>
-    </div>
-    <div id="pageWrapperDiv">
+    <div id="container">
+        <h1>
+            Online English Book Reader
+        </h1>
+        <ul id="bookListUl">
+        </ul>
+        <p style="opacity: 0.8;">For study purpose only!</p>
     </div>
 </body>
 
