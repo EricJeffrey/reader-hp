@@ -123,7 +123,7 @@
         }
         // 获取数据
         function getAllWord(onSuccess, onFail) {
-            $.get("./allword.json", (data, status, xhr) => {
+            $.get("../cgi/allword", (data, status, xhr) => {
                 if (status == "success") onSuccess(data);
                 else onFail();
             }).fail(() => { alert("网络错误"); });

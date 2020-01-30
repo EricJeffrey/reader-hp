@@ -417,7 +417,7 @@
             mouseUpListener(event) {
                 // 盒子显示，隐藏
                 if (toolBox.status.wordBoxShowing) toolBox.hideWordBox();
-                else if (toolBox.status.sentenceBoxShowing) toolBox.hideSentenceBox();
+                if (toolBox.status.sentenceBoxShowing) toolBox.hideSentenceBox();
                 else {
                     // 盒子未显示
                     let tmpSelection = document.getSelection();

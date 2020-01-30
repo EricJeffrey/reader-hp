@@ -50,7 +50,7 @@
             });
         }
         window.onload = function () {
-            $.get("./allsentence.json", (data, status, xhr) => {
+            $.get("../cgi/allsentence", (data, status, xhr) => {
                 if (status == "success") createAllCards((typeof(data) == "string" ? JSON.parse(data) : data));
                 else alert("获取数据失败");
             }).fail(() => { alert("网络错误"); });
