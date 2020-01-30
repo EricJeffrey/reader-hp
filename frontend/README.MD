@@ -17,8 +17,8 @@
   > 2. 通过三次贝塞尔曲线实现，参考[chromium-edge](https://www.ithome.com/0/461/757.htm)的曲线设置
 - 类似于edge的翻页动画
    > 使用edge-chromium浏览器阅读
-- 鼠标悬浮/快捷键显示单词释义
-  > 使用有道API，添加一个固定位置的元素即可
+- ~~鼠标悬浮/快捷键显示单词释义~~ 鼠标点击显示释义
+  > ~~使用有道API~~，使用词典数据库，将单词使用`span`包裹然后设置`span`的悬浮事件。但内容多时非常影响性能，改为鼠标选择单词显示翻译
 - 选中文本弹出菜单
   > 使用`document.onselectionchange`搭配`onmouseup`, `onmousedown`实现
 - 记录阅读进度
