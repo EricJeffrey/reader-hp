@@ -152,21 +152,17 @@ def checkAllWord(resList: list):
         fp.writelines(wordList)
 
 
-if __name__ == "__main__":
-    resList = []
-    # resList = process()
-    # json.dump(resList, open("tmpp.json", "w", encoding="utf-8"),
-    #           ensure_ascii=False, indent=0)
-
-    print("loading resList")
-    resList = json.load(
-        open("tmpp.json", "r", encoding="utf-8"), encoding="utf-8")
-    print("resList loaded, writing")
-
+def parseDictAndMakeTable(conn: connector.MySQLConnection):
+    '''
+    从ecdit.csv读取数据，创建表，并将数据导入到数据库
+    '''
+    createDictTable(conn)
+    resList = process()
     random.shuffle(resList)
-    print("resList shuffled, writing")
-
-    conn = connector.connect(user="root", password="123456", database=dbName)
-    # createDictTable(conn)
     write2db(resList, conn)
+
+
+if __name__ == "__main__":
+    conn = connector.connect(user="root", password="123456", database=dbName)
+    parseDictAndMakeTable(conn)
     conn.close()
