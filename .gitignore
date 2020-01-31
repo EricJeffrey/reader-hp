@@ -7,3 +7,4 @@ ecdict.csv
 .vscode/.ropeproject
 
 backend/svr/halox
+__pycache__/
