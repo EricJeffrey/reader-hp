@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
     <title>Reader</title>
     <!-- 翻译工具盒子 -->
     <style>
@@ -269,7 +269,7 @@
         }
     </style>
 
-    <script src="./jquery-3.4.1.min.js"></script>
+    <script src="/static/jquery-3.4.1.min.js"></script>
     <script>
         let num2engword = ["ZERO", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE",
             "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY", "TWENTY-ONE", "TWENTY-TWO",
@@ -307,6 +307,7 @@
                 wordBoxShowing: false,
                 sentenceBoxShowing: false,
                 selectionID: 0,
+                selectStarted: false,
                 // 相对位置, 可以通过 pageWrapperDiv.scrollLeft 偏移获得
                 selectRect: null,
                 selectText: "",
@@ -318,6 +319,10 @@
                     this.mousePos = mpos;
                     this.selectText = text;
                     this.selectTarget = starget;
+                    this.selectStarted = false;
+                },
+                setSelectStarted() {
+                    this.selectStarted = true;
                 },
                 setWordBoxShowing(showing) { this.wordBoxShowing = showing; },
                 setSentenceBoxShowing(showing) { this.sentenceBoxShowing = showing; }
@@ -429,7 +434,8 @@
                         }
                         return true;
                     };
-                    if (tmpSelectText.length > 0) {
+                    // 在已选中的文字上单机是，document.getSelection() 仍然为上次选中文字
+                    if (tmpSelectText.length && toolBox.status.selectStarted) {
                         let rect = tmpSelection.getRangeAt(0).getBoundingClientRect();
                         // 记录位置
                         toolBox.status.set(rect, { x: event.x, y: event.y }, tmpSelectText, event.target);
@@ -458,6 +464,9 @@
                 }
             },
             addListener() {
+                pageWrapperDiv.addEventListener("selectstart", (event)=>{
+                    toolBox.status.setSelectStarted();
+                });
                 // 显示翻译与工具栏
                 pageWrapperDiv.addEventListener("mouseup", this.mouseUpListener);
                 // 复制 记录

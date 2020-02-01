@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
     <title>Words</title>
     <style>
         body {
@@ -33,7 +33,8 @@
             /* width: 400px; */
             overflow-wrap: normal;
         }
-        .card:hover{
+
+        .card:hover {
             background-color: rgb(235, 233, 233);
         }
 
@@ -54,12 +55,12 @@
             display: flex;
             flex-direction: column;
         }
-        .card .exchange{
+
+        .card .exchange {
             max-width: 500px;
         }
-
     </style>
-    <script src="./jquery-3.4.1.min.js"></script>
+    <script src="/static/jquery-3.4.1.min.js"></script>
     <script>
         // 创建一个 div class="card" 并将内容设置为 data
         function generateCard(data) {
@@ -118,12 +119,20 @@
         }
         // 创建所有卡片，data 为 json数组
         function createAllCard(data) {
+            function shuffle(a) {
+                for (let i = a.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [a[i], a[j]] = [a[j], a[i]];
+                }
+                return a;
+            }
+            data = shuffle(data["data"]);
             let container = document.getElementById("container");
             for (let i = data.length - 1; i >= 0; i--) { container.appendChild(generateCard(data[i])); }
         }
         // 获取数据
         function getAllWord(onSuccess, onFail) {
-            $.get("../cgi/allword", (data, status, xhr) => {
+            $.get("/cgi/allwords", (data, status, xhr) => {
                 if (status == "success") onSuccess(data);
                 else onFail();
             }).fail(() => { alert("网络错误"); });

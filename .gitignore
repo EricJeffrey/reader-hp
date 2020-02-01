@@ -8,3 +8,5 @@ ecdict.csv
 
 backend/svr/halox
 __pycache__/
+
+nohup.out
