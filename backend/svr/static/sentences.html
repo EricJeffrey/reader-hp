@@ -8,6 +8,16 @@
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
     <title>Sentences</title>
     <style>
+        @font-face {
+            font-family: Segoe Print;
+            src: url("/static/segoe_print.ttf");
+        }
+
+        @font-face {
+            font-family: Lucida Sans;
+            src: url("/static/LucidaSans.otf");
+        }
+
         body {
             font-family: 'Segoe Print', '等线', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 20px;
@@ -17,20 +27,21 @@
         .container {
             margin: auto;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             padding: 0px 10px 0px 10px;
             width: fit-content;
+            flex-wrap: wrap;
         }
 
         .card {
             box-shadow: gray 1px 2px 8px;
             width: fit-content;
             padding: 10px;
-            margin-block-end: 10px;
+            margin: 5px;
             border-radius: 5px;
             display: flex;
             flex-direction: column;
-            max-width: 600px;
+            max-width: 540px;
             overflow-wrap: normal;
         }
 
