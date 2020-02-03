@@ -332,7 +332,10 @@
                 if (typeof (wordTrans) == "string")
                     wordTrans = JSON.parse(wordTrans);
                 let data = wordTrans["data"], tmpbr = "<br>";
-                let res = "<span class=\"tranBoxWord\">" + data["word"] + " [" + data["phonetic"] + "]" + "</span>" + tmpbr;
+                let res = "<span class=\"tranBoxWord\">" + data["word"];
+                if (data["phonetic"] != null && data["phonetic"].length > 0)
+                    res += " [" + data["phonetic"] + "]";
+                res += "</span>" + tmpbr;
                 let transList = data["translation"].split('\n');
                 let i = 1;
                 transList.forEach(tmp => { res += tmp + tmpbr; i += 1; });
@@ -464,7 +467,7 @@
                 }
             },
             addListener() {
-                pageWrapperDiv.addEventListener("selectstart", (event)=>{
+                pageWrapperDiv.addEventListener("selectstart", (event) => {
                     toolBox.status.setSelectStarted();
                 });
                 // 显示翻译与工具栏
@@ -638,15 +641,19 @@
 
         // 存储 - 记录阅读进度
         var storage = {
+            bookName: "",
             StrKeyReadProcess: "scrollLeft",
             getReadProcess: function () {
-                let tmp = window.localStorage.getItem(this.StrKeyReadProcess);
-                if (tmp == null) return 0;
-                return Number(tmp);
+                let tmpData = window.localStorage.getItem(this.bookName);
+                if (tmpData == null) return 0;
+                return JSON.parse(tmpData)[storage.StrKeyReadProcess];
             },
             setReadProcess: function (scrollLeft) {
-                window.localStorage.setItem(this.StrKeyReadProcess, scrollLeft);
-            }
+                let data = {};
+                data[storage.StrKeyReadProcess] = scrollLeft;
+                window.localStorage.setItem(this.bookName, JSON.stringify(data));
+            },
+            setBookName: function (name) { this.bookName = name; }
         };
 
         // 加载数据，注册盒子等监听器
@@ -669,6 +676,7 @@
                 return bookName;
             };
             let bookName = getBookNameFromQuery(getQuerySet(window.location.search));
+            storage.setBookName(bookName);
             // 显示正在加载动画
             pageLoader.setOnLoadOverListener(() => { loadingBox.style.display = "none"; });
             dataFetcher.getBook(
