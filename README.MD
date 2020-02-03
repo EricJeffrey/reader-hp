@@ -1,6 +1,6 @@
 # 哈利波特阅读网站
 
-哈利波特阅读网站项目，包括网页前端(frontend)，网站后端(backend)以及手机App前端(尚未开始)。
+哈利波特阅读网站项目，包括网页前端(frontend)，网站后端(backend)以及~~手机App前端(尚未开始)~~。
 
 ## 功能设计
 
@@ -12,12 +12,14 @@
 - 记录某个单词
 - 记录某个句子
 - 复制单词句子
+- 查看记录的单词（包括释义）和句子
 
-### APP
-使用app阅读记录的单词与句子
+~~### APP~~
+
+使用~~app~~网站阅读记录的单词与句子
 
 - 查看记录的单词
-  - 形式: 普通列表，每一项包括{单词 发音 释义}, 列表项显示全部内容
+  - 形式: 卡片式列表，每一项包括{单词 发音 释义},
 - 查看记录的句子
   - 形式: 卡片式列表，卡片中为句子内容
 - 一次获得全部单词
@@ -32,5 +34,5 @@
 | wordtrans       | GET wordtrans?word=xxx       | {"status": 1/0, "data":{"word": "xxx","phonetic": "xxx","translation": "xxx\nxxx"}} |
 | wordrec         | GET wordrec?word=xxx         | {"staus":1/0}                                                                       |
 | sentencerec     | GET sentencerec?sentence=xxx | {"staus":1/0}                                                                       |
-| app-allword     | GET appallword               | []                                                                                  |
-| app-allsentence | GET appallsentence           | []                                                                                  |
+| allword     | GET appallword               | []                                                                                  |
+| allsentence | GET appallsentence           | []                                                                                  |
