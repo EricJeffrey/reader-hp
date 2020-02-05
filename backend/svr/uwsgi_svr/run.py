@@ -62,11 +62,12 @@ def getDBConnection():
 
 def queryWord(word: str, conn: connector.MySQLConnection, tableName=dictTableName):
     """ 从数据库查询单词，返回 tuple 或 none """
-    for s in word:
-        if not s.isalpha() and not s == '-':
-            return None
+    # for s in word:
+    #     if not s.isalpha() and not s == '-':
+    #         return None
+
     cursor = conn.cursor()
-    cursor.execute("select * from %s where word = '%s'" % (tableName, word))
+    cursor.execute("select * from %s where word = \"%s\"" % (tableName, word.replace('"', '\\"')))
     return cursor.fetchone()
 
 

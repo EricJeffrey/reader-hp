@@ -431,9 +431,11 @@
                     let tmpSelection = document.getSelection();
                     let tmpSelectText = tmpSelection.toString().trim();
                     let allAlpha = (text = "") => {
+                        let cntOfSpace = 0;
                         for (let i = 0; i < text.length; i++) {
                             const ch = text[i];
-                            if (!(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z')) return false;
+                            if (ch == ' ') cntOfSpace++;
+                            if (cntOfSpace >= 3) return false;
                         }
                         return true;
                     };

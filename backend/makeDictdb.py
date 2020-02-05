@@ -11,6 +11,7 @@ import sys
 import mysql.connector as connector
 import csv
 import json
+import resource
 
 '''
 res line num: 693205
@@ -32,9 +33,9 @@ def checkAtoZSpace(s: str):
     '''
     检查字符串是否只包含字母和空格
     '''
-    for ch in s:
-        if (not ch.isalpha()) and (not ch.isspace()):
-            return False
+    # for ch in s:
+    #     if (not ch.isalpha()) and (not ch.isspace()):
+    #         return False
     return True
 
 
@@ -163,6 +164,7 @@ def parseDictAndMakeTable(conn: connector.MySQLConnection):
 
 
 if __name__ == "__main__":
+    # resource.setrlimit(resource.RLIMIT_DATA, resource.RLIM_INFINITY, resource.RLIM_INFINITY)
     conn = connector.connect(user="root", password="123456", database=dbName)
     parseDictAndMakeTable(conn)
     conn.close()
