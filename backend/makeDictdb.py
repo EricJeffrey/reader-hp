@@ -1,3 +1,4 @@
+# -*- coding=utf-8 -*-
 '''
 字典数据库处理
 从edict.csv(https://github.com/EricJeffrey/ECDICT)获取英文字典数据，连接到mysql数据库[reader_hp]并创建表[wordDict]
@@ -11,7 +12,7 @@ import sys
 import mysql.connector as connector
 import csv
 import json
-import resource
+# import resource
 
 '''
 res line num: 693205
@@ -103,7 +104,8 @@ def createDictTable(conn: connector.MySQLConnection):
     创建 wordDict 表
     '''
     cursor = conn.cursor()
-    cursor.execute("create table %s (%s %s, %s %s, %s %s, %s %s, PRIMARY KEY(%s))" % (
+    cursor.execute("drop table wordDict;")
+    cursor.execute("create table %s (%s %s, %s %s, %s %s, %s %s, PRIMARY KEY(%s));" % (
         dictTableName, dictTableCols[0][0], dictTableCols[0][1], dictTableCols[1][0],
         dictTableCols[1][1], dictTableCols[2][0], dictTableCols[2][1], dictTableCols[3][0], dictTableCols[3][1], dictTableCols[0][0]))
     cursor.close()
@@ -159,12 +161,14 @@ def parseDictAndMakeTable(conn: connector.MySQLConnection):
     '''
     createDictTable(conn)
     resList = process()
-    random.shuffle(resList)
+    # random.shuffle(resList)
     write2db(resList, conn)
 
 
 if __name__ == "__main__":
-    # resource.setrlimit(resource.RLIMIT_DATA, resource.RLIM_INFINITY, resource.RLIM_INFINITY)
-    conn = connector.connect(user="root", password="123456", database=dbName)
+    # print("debug", file=sys.stderr)
+    #    resource.setrlimit(resource.RLIMIT_DATA, resource.RLIM_INFINITY, resource.RLIM_INFINITY)
+    # print("debug", file=sys.stderr)
+    conn = connector.connect(user="sjf", password="123456", database=dbName, charset="utf8mb4")
     parseDictAndMakeTable(conn)
     conn.close()

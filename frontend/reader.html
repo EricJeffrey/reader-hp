@@ -277,6 +277,17 @@
             "THIRTY-ONE", "THIRTY-TWO", "THIRTY-THREE", "THIRTY-FOUR", "THIRTY-FIVE", "THIRTY-SIX", "THIRTY-SEVEN", "THIRTY-EIGHT",
             "THIRTY-NINE", "FORTY", "FORTY-ONE", "FORTY-TWO", "FORTY-THREE", "FORTY-FOUR", "FORTY-FIVE", "FORTY-SIX", "FORTY-SEVEN",
             "FORTY-EIGHT", "FORTY-NINE", "FIFTY"]
+        let check = (text = "") => {
+            let cntOfSpace = 0;
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (ch == ' ') cntOfSpace++;
+                // 句子
+                if (cntOfSpace >= 3) return false;
+            }
+            // 单词
+            return true;
+        };
 
         // 从服务器获取数据
         let dataFetcher = {
@@ -284,18 +295,13 @@
                 $.get(bookUrl, onSuccess).fail(onFail);
             },
             getWordTrans(word, onSuccess, onFail) {
+                word = word.toLowerCase().replace('‘', '\'');
+                word = word.toLowerCase().replace('’', '\'');
                 $.get("/cgi/wordtrans?word=" + word.toLowerCase(), onSuccess).fail(onFail);
             },
             recordText(text, onSuccess, onFail) {
-                let allAlpha = (text = "") => {
-                    for (let i = 0; i < text.length; i++) {
-                        const ch = text[i];
-                        if (!(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z')) return false;
-                    }
-                    return true;
-                };
                 let tmpUrl = "/cgi/sentencerec?sentence=";
-                if (allAlpha(text))
+                if (check(text))
                     tmpUrl = "/cgi/wordrec?word=", text = text.toLowerCase();
                 $.get(tmpUrl + text, onSuccess).fail(onFail);
             }
@@ -430,22 +436,13 @@
                     // 盒子未显示
                     let tmpSelection = document.getSelection();
                     let tmpSelectText = tmpSelection.toString().trim();
-                    let allAlpha = (text = "") => {
-                        let cntOfSpace = 0;
-                        for (let i = 0; i < text.length; i++) {
-                            const ch = text[i];
-                            if (ch == ' ') cntOfSpace++;
-                            if (cntOfSpace >= 3) return false;
-                        }
-                        return true;
-                    };
                     // 在已选中的文字上单机是，document.getSelection() 仍然为上次选中文字
                     if (tmpSelectText.length && toolBox.status.selectStarted) {
                         let rect = tmpSelection.getRangeAt(0).getBoundingClientRect();
                         // 记录位置
                         toolBox.status.set(rect, { x: event.x, y: event.y }, tmpSelectText, event.target);
                         // 单词
-                        if (allAlpha(tmpSelectText)) {
+                        if (check(tmpSelectText)) {
                             function work(sid) {
                                 let onSuccess = (data) => {
                                     if (toolBox.status.selectionID == sid) {

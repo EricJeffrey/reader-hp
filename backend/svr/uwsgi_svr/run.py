@@ -9,7 +9,7 @@ import mysql.connector as connector
 
 
 host = '127.0.0.1'
-user = 'root'
+user = 'sjf'
 passwd = '123456'
 port = 3306
 
@@ -65,9 +65,8 @@ def queryWord(word: str, conn: connector.MySQLConnection, tableName=dictTableNam
     # for s in word:
     #     if not s.isalpha() and not s == '-':
     #         return None
-
     cursor = conn.cursor()
-    cursor.execute("select * from %s where word = \"%s\"" % (tableName, word.replace('"', '\\"')))
+    cursor.execute("select * from %s where word = \"%s\";" % (tableName, word))
     return cursor.fetchone()
 
 
