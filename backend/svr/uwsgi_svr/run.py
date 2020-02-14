@@ -152,7 +152,7 @@ def dispatch(path, paraDict):
     根据 path 执行相应的函数，返回一个对象{"status": 0/1, "data": {}}
     """
     res = {"status": 0}
-    prefix = "/cgi/"
+    prefix = "/reader/cgi/"
 
     if path[0: len(prefix)] != prefix:
         return res
@@ -184,9 +184,9 @@ def dispatch(path, paraDict):
 
 
 def application(env, start_response):
-    if env["PATH_INFO"] == "/":
+    if env["PATH_INFO"] == "/reader" or env["PATH_INFO"] == "/reader/":
         start_response("200 OK", [("Content-Type", "text/html")])
-        return [b'<html><script>location.href = "/static/index.html";</script></html>']
+        return [b'<html><script>location.href = "/reader/static/index.html";</script></html>']
     res = dispatch(env["PATH_INFO"], parse.parse_qs(env["QUERY_STRING"]))
     start_response("200 OK", [('Content-Type', 'text/plain;charset=UTF-8')])
-    return [json.dumps(res, ensure_ascii=False, indent=4).encode()]
+    return [json.dumps(res, ensure_ascii=False).encode()]

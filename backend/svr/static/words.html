@@ -5,16 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/reader/static/favicon.ico" type="image/x-icon">
     <title>Words</title>
     <style>
         @font-face {
             font-family: Segoe Print;
-            src: url("/static/segoe_print.ttf");
+            src: url("/reader/static/segoe_print.ttf");
         }
         @font-face {
             font-family: Lucida Sans;
-            src: url("/static/LucidaSans.otf");
+            src: url("/reader/static/LucidaSans.otf");
         }
         body {
             font-family: 'Segoe Print', '等线', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -39,12 +39,8 @@
             border-radius: 5px;
             display: flex;
             flex-direction: column;
-            /* width: 400px; */
             overflow-wrap: normal;
-        }
-
-        .card:hover {
-            background-color: rgb(235, 233, 233);
+            color: whitesmoke;
         }
 
         .card .word {
@@ -68,8 +64,12 @@
         .card .exchange {
             max-width: 500px;
         }
+        .card .exchange span{
+            margin-right: 15px;
+        }
     </style>
-    <script src="/static/jquery-3.4.1.min.js"></script>
+    <script src="/reader/static/jquery-3.4.1.min.js"></script>
+    <script src="/reader/static/common.js"></script>
     <script>
         // 创建一个 div class="card" 并将内容设置为 data
         function generateCard(data) {
@@ -121,6 +121,9 @@
             // add to cardDIv
             let cardDiv = createDiv();
             cardDiv.className = "card";
+            let tmpColor = randomColor();
+            cardDiv.style.backgroundColor = tmpColor.color;
+            cardDiv.setAttribute("color_name", tmpColor.name);
             cardDiv.appendChild(tmpDiv);
             cardDiv.appendChild(transDiv);
             cardDiv.appendChild(exDiv);
@@ -128,20 +131,13 @@
         }
         // 创建所有卡片，data 为 json数组
         function createAllCard(data) {
-            function shuffle(a) {
-                for (let i = a.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [a[i], a[j]] = [a[j], a[i]];
-                }
-                return a;
-            }
             data = shuffle(data["data"]);
             let container = document.getElementById("container");
             for (let i = data.length - 1; i >= 0; i--) { container.appendChild(generateCard(data[i])); }
         }
         // 获取数据
         function getAllWord(onSuccess, onFail) {
-            $.get("/cgi/allwords", (data, status, xhr) => {
+            $.get("/reader/cgi/allwords", (data, status, xhr) => {
                 if (status == "success") onSuccess(data);
                 else onFail();
             }).fail(() => { alert("网络错误"); });

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/reader/static/favicon.ico" type="image/x-icon">
     <title>Reader</title>
     <style>
         body {
@@ -60,7 +60,6 @@
     <script>
         // 无格式后缀的文件名 以及 书籍名称
         let bookFileNameList = [
-            "tmphp3",
             "HP1-EN",
             "HP2-EN",
             "HP3-EN",
@@ -70,7 +69,6 @@
             "HP7-EN"
         ];
         let bookTitleList = [
-            "Test Book Harry Potter",
             "Harry Potter and the Sorcerer's Stone",
             'Harry Potter and The Chamber Of Secrets',
             'Harry Potter and the Prisoner of Azkaban',
@@ -85,7 +83,7 @@
                 const bookFileName = bookFileNameList[i];
                 const bookTitle = bookTitleList[i];
                 let a = document.createElement("a");
-                a.href = "/static/reader.html?bookName=" + bookFileName;
+                a.href = "/reader/static/reader.html?bookName=" + bookFileName;
                 a.target = "_blank";
                 a.innerHTML = bookTitle;
                 let tmpLi = document.createElement("li");
@@ -107,8 +105,8 @@
             Online English Book Reader
         </h1>
         <div style="padding-left: 5px;">
-            <a href="/static/words.html" target="_blank">all words</a>&nbsp;
-            <a href="/static/sentences.html" target="_blank">all sentences</a>
+            <a href="/reader/static/words.html" target="_blank">All words</a>&nbsp;
+            <a href="/reader/static/sentences.html" target="_blank">All sentences</a>
         </div>
         <ul id="bookListUl">
         </ul>
