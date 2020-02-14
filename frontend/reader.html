@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/reader/static/favicon.ico" type="image/x-icon">
     <title>Reader</title>
     <!-- 翻译工具盒子 -->
     <style>
@@ -144,7 +144,7 @@
             outline: none;
         }
 
-        #pageWrapperDiv::-webkit-scrollbar {
+        #pageWrapperDiv::-webkit-scrollbar, body::-webkit-scrollbar {
             display: none;
         }
     </style>
@@ -269,7 +269,7 @@
         }
     </style>
 
-    <script src="/static/jquery-3.4.1.min.js"></script>
+    <script src="/reader/static/jquery-3.4.1.min.js"></script>
     <script>
         let num2engword = ["ZERO", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE",
             "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY", "TWENTY-ONE", "TWENTY-TWO",
@@ -297,12 +297,12 @@
             getWordTrans(word, onSuccess, onFail) {
                 word = word.toLowerCase().replace('‘', '\'');
                 word = word.toLowerCase().replace('’', '\'');
-                $.get("/cgi/wordtrans?word=" + word.toLowerCase(), onSuccess).fail(onFail);
+                $.get("/reader/cgi/wordtrans?word=" + word.toLowerCase(), onSuccess).fail(onFail);
             },
             recordText(text, onSuccess, onFail) {
-                let tmpUrl = "/cgi/sentencerec?sentence=";
+                let tmpUrl = "/reader/cgi/sentencerec?sentence=";
                 if (check(text))
-                    tmpUrl = "/cgi/wordrec?word=", text = text.toLowerCase();
+                    tmpUrl = "/reader/cgi/wordrec?word=", text = text.toLowerCase();
                 $.get(tmpUrl + text, onSuccess).fail(onFail);
             }
         };
